@@ -68,6 +68,16 @@ public class NavigationBar extends JPanel {
             Image scaledLogo = logoIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
             JLabel logo = new JLabel(new ImageIcon(scaledLogo));
             logo.setBorder(new EmptyBorder(5, 20, 5, 0));
+            logo.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            logo.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (navigationListener != null) {
+                        navigationListener.onHomeClicked();
+                        setActivePage("Home");
+                    }
+                }
+            });
             add(logo, BorderLayout.WEST);
         }
 
@@ -176,7 +186,7 @@ public class NavigationBar extends JPanel {
         rightContainer.add(profileCard);
         add(rightContainer, BorderLayout.EAST);
 
-        // Set Documents as default active page
-        setActivePage("Documents");
+        // Set Home as default active page
+        setActivePage("Home");
     }
 }
