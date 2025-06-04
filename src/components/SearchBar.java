@@ -11,8 +11,8 @@ public class SearchBar extends JPanel {
     private final String PLACEHOLDER = "Search document";
     private JTextField searchField;
 
-    private ImageIcon createImageIcon(String path) {
-        URL imgURL = getClass().getClassLoader().getResource("assets/images/" + path);
+    private ImageIcon loadImage(String path) {
+        URL imgURL = getClass().getClassLoader().getResource("img/" + path);
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {
@@ -56,7 +56,7 @@ public class SearchBar extends JPanel {
 
         // Icon pencarian
         JLabel searchIcon = new JLabel();
-        ImageIcon icon = createImageIcon("icon-search.png");
+        ImageIcon icon = loadImage("icon-search.png");
         if (icon != null) {
             Image scaledIcon = icon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
             searchIcon.setIcon(new ImageIcon(scaledIcon));
