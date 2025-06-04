@@ -11,11 +11,11 @@ public class SearchBar extends JPanel {
     private final String PLACEHOLDER = "Search document";
     private JTextField searchField;
 
-    private ImageIcon loadImage(String path) {
-        URL imgURL = getClass().getClassLoader().getResource("img/" + path);
-        if (imgURL != null) {
-            return new ImageIcon(imgURL);
-        } else {
+    private ImageIcon createImageIcon(String path) {
+        try {
+            String imgPath = System.getProperty("user.dir") + "/img/" + path;
+            return new ImageIcon(imgPath);
+        } catch (Exception e) {
             System.err.println("Couldn't find file: " + path);
             return null;
         }
@@ -54,16 +54,14 @@ public class SearchBar extends JPanel {
             }
         });
 
-        // Icon pencarian
-        JLabel searchIcon = new JLabel();
-        ImageIcon icon = loadImage("icon-search.png");
-        if (icon != null) {
-            Image scaledIcon = icon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-            searchIcon.setIcon(new ImageIcon(scaledIcon));
+        // Search icon
+        ImageIcon searchIcon = createImageIcon("icon-search.png");
+        if (searchIcon != null) {
+            Image scaledSearch = searchIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+            JLabel searchLabel = new JLabel(new ImageIcon(scaledSearch));
+            searchLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+            add(searchLabel, BorderLayout.WEST);
         }
-        searchIcon.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
-        searchIcon.setBackground(Color.WHITE);
-        searchIcon.setOpaque(true);
 
         // Tambahkan ke panel
         JPanel leftPadding = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
@@ -71,7 +69,6 @@ public class SearchBar extends JPanel {
         
         add(leftPadding, BorderLayout.WEST);
         add(searchField, BorderLayout.CENTER);
-        add(searchIcon, BorderLayout.EAST);
 
         setPreferredSize(new Dimension(500, 40));
     }

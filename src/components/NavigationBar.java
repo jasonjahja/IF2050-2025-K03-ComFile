@@ -35,11 +35,11 @@ public class NavigationBar extends JPanel {
         roleLabel.setText(role);
     }
     
-    private ImageIcon loadImage(String path) {
-        URL imgURL = getClass().getClassLoader().getResource("img/" + path);
-        if (imgURL != null) {
-            return new ImageIcon(imgURL);
-        } else {
+    private ImageIcon createImageIcon(String path) {
+        try {
+            String imgPath = System.getProperty("user.dir") + "/img/" + path;
+            return new ImageIcon(imgPath);
+        } catch (Exception e) {
             System.err.println("Couldn't find file: " + path);
             return null;
         }
@@ -62,12 +62,12 @@ public class NavigationBar extends JPanel {
         setBackground(Color.WHITE);
         navLinks = new HashMap<>();
 
-  // Logo 
-        ImageIcon logoIcon = loadImage("logo.png");
+        // Logo 
+        ImageIcon logoIcon = createImageIcon("logo.png");
         if (logoIcon != null) {
-  Image scaledLogo = logoIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
-  JLabel logo = new JLabel(new ImageIcon(scaledLogo));
-  logo.setBorder(new EmptyBorder(5, 20, 5, 0));
+            Image scaledLogo = logoIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
+            JLabel logo = new JLabel(new ImageIcon(scaledLogo));
+            logo.setBorder(new EmptyBorder(5, 20, 5, 0));
             logo.setCursor(new Cursor(Cursor.HAND_CURSOR));
             logo.addMouseListener(new MouseAdapter() {
                 @Override
@@ -81,15 +81,15 @@ public class NavigationBar extends JPanel {
             add(logo, BorderLayout.WEST);
         }
 
-  // Right Container
-  JPanel rightContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-  rightContainer.setBackground(Color.WHITE);
+        // Right Container
+        JPanel rightContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
+        rightContainer.setBackground(Color.WHITE);
 
-  // Menu links
-  String[] links = {"Home", "Documents", "Backup"};
-  for (String text : links) {
-      JLabel link = new JLabel(text);
-      link.setFont(new Font("Arial", Font.PLAIN, 14));
+        // Menu links
+        String[] links = {"Home", "Documents", "Backup"};
+        for (String text : links) {
+            JLabel link = new JLabel(text);
+            link.setFont(new Font("Arial", Font.PLAIN, 14));
             link.setForeground(inactiveColor);
             link.setCursor(new Cursor(Cursor.HAND_CURSOR));
             
@@ -117,14 +117,14 @@ public class NavigationBar extends JPanel {
             });
             
             navLinks.put(text, link);
-      rightContainer.add(link);
-  }
+            rightContainer.add(link);
+        }
 
-  // Bell Icon
-        ImageIcon bellIcon = loadImage("icon-bell.png");
+        // Bell Icon
+        ImageIcon bellIcon = createImageIcon("icon-bell.png");
         if (bellIcon != null) {
-  Image scaledBell = bellIcon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
-  JLabel bellLabel = new JLabel(new ImageIcon(scaledBell));
+            Image scaledBell = bellIcon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
+            JLabel bellLabel = new JLabel(new ImageIcon(scaledBell));
             bellLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
             bellLabel.addMouseListener(new MouseAdapter() {
                 @Override
@@ -134,43 +134,44 @@ public class NavigationBar extends JPanel {
                     }
                 }
             });
-  rightContainer.add(bellLabel);
+            rightContainer.add(bellLabel);
         }
 
-  // Profile Card
-  JPanel profileCard = new JPanel(new BorderLayout());
-  profileCard.setBackground(Color.WHITE);
-  profileCard.setPreferredSize(new Dimension(180, 50));
-  profileCard.setBorder(BorderFactory.createCompoundBorder(
-          BorderFactory.createLineBorder(new Color(220, 220, 230), 1, true),
-          new EmptyBorder(5, 10, 5, 10)
-  ));
-  
-        ImageIcon userIcon = loadImage("icon-user.png");
+        // Profile Card
+        JPanel profileCard = new JPanel(new BorderLayout());
+        profileCard.setBackground(Color.WHITE);
+        profileCard.setPreferredSize(new Dimension(180, 50));
+        profileCard.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 230), 1, true),
+                new EmptyBorder(5, 10, 5, 10)
+        ));
+        
+        // User Icon
+        ImageIcon userIcon = createImageIcon("icon-user.png");
         if (userIcon != null) {
-  Image scaledUser = userIcon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
-  JLabel userLabel = new JLabel(new ImageIcon(scaledUser));
+            Image scaledUser = userIcon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
+            JLabel userLabel = new JLabel(new ImageIcon(scaledUser));
             userLabel.setBorder(new EmptyBorder(0, 0, 0, 10));
-  profileCard.add(userLabel, BorderLayout.WEST);
+            profileCard.add(userLabel, BorderLayout.WEST);
         }
 
-  // Name + Role
-  JPanel namePanel = new JPanel();
-  namePanel.setBackground(Color.WHITE);
-  namePanel.setLayout(new BoxLayout(namePanel, BoxLayout.Y_AXIS));
+        // Name + Role
+        JPanel namePanel = new JPanel();
+        namePanel.setBackground(Color.WHITE);
+        namePanel.setLayout(new BoxLayout(namePanel, BoxLayout.Y_AXIS));
         nameLabel = new JLabel("User");
         nameLabel.setFont(new Font("Arial", Font.BOLD, 14));
         roleLabel = new JLabel("Employee");
         roleLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         namePanel.add(nameLabel);
         namePanel.add(roleLabel);
-  profileCard.add(namePanel, BorderLayout.CENTER);
+        profileCard.add(namePanel, BorderLayout.CENTER);
 
-  // Logout Icon
-        ImageIcon logoutIcon = loadImage("icon-logout.png");
+        // Logout Icon
+        ImageIcon logoutIcon = createImageIcon("icon-logout.png");
         if (logoutIcon != null) {
-  Image scaledLogout = logoutIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-  JLabel logoutLabel = new JLabel(new ImageIcon(scaledLogout));
+            Image scaledLogout = logoutIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+            JLabel logoutLabel = new JLabel(new ImageIcon(scaledLogout));
             logoutLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
             logoutLabel.addMouseListener(new MouseAdapter() {
                 @Override
@@ -180,7 +181,7 @@ public class NavigationBar extends JPanel {
                     }
                 }
             });
-  profileCard.add(logoutLabel, BorderLayout.EAST);
+            profileCard.add(logoutLabel, BorderLayout.EAST);
         }
 
         rightContainer.add(profileCard);
