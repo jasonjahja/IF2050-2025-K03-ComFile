@@ -1,136 +1,169 @@
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+package pages.ManageDocuments;
+
+import java.io.File;
+import java.util.*;
 
 public class Document {
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("File Name");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 700);
-        frame.setLocationRelativeTo(null);
-        frame.setLayout(new BorderLayout());
 
-        Color bgSoftLavender = new Color(245, 243, 247);
-        Color textNormal = new Color(55, 40, 80);
-        Color textHover = new Color(90, 70, 120);
+    // ================== USER ==================
+    public static class User {
+        public String id;
+        public String name;
+        public String role;
 
-        frame.getContentPane().setBackground(bgSoftLavender);
-
-        // ========== Header ==========
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(Color.WHITE);
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(220, 218, 230)));
-
-        ImageIcon backIcon = new ImageIcon("src/assets/icon-back.png");
-        Image scaledBack = backIcon.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
-        JLabel backLabel = new JLabel(" File Name", new ImageIcon(scaledBack), JLabel.LEFT);
-        backLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
-        backLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 0));
-        backLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        backLabel.setForeground(textNormal);
-        backLabel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                backLabel.setForeground(textHover);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                backLabel.setForeground(textNormal);
-            }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                System.out.println("Back clicked");
-            }
-        });
-        header.add(backLabel, BorderLayout.WEST);
-
-        JPanel iconPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 40, 10));
-        iconPanel.setOpaque(false);
-        iconPanel.add(createIconWithText("src/assets/icon-sharing.png", "Sharing", textNormal, textHover));
-        iconPanel.add(createIconWithText("src/assets/icon-backup.png", "Backup", textNormal, textHover));
-        iconPanel.add(createIconWithText("src/assets/icon-delete.png", "Delete", textNormal, textHover));
-        header.add(iconPanel, BorderLayout.EAST);
-
-        frame.add(header, BorderLayout.NORTH);
-
-        // ========== Dokumen A4 ==========
-        JPanel outerPanel = new JPanel(new GridBagLayout());
-        outerPanel.setBackground(bgSoftLavender);
-        outerPanel.setBorder(BorderFactory.createEmptyBorder(40, 0, 60, 0));
-
-        JPanel docPanel = new JPanel();
-        docPanel.setPreferredSize(new Dimension(794, 1123));
-        docPanel.setBackground(Color.WHITE);
-        docPanel.setLayout(new BorderLayout());
-        docPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
-
-        JTextArea textArea = new JTextArea("Ensure your data is safe and recoverable. ".repeat(100));
-        textArea.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        textArea.setLineWrap(true);
-        textArea.setWrapStyleWord(true);
-        textArea.setOpaque(false);
-        textArea.setEditable(false);
-        textArea.setFocusable(false);
-        textArea.getCaret().setVisible(false);
-
-        JScrollPane docScrollPane = new JScrollPane(textArea);
-        docScrollPane.setBorder(null);
-        docScrollPane.setOpaque(false);
-        docScrollPane.getViewport().setOpaque(false);
-
-        docPanel.add(docScrollPane, BorderLayout.CENTER);
-        outerPanel.add(docPanel);
-
-        JScrollPane scrollFrame = new JScrollPane(outerPanel);
-        scrollFrame.setBorder(null);
-        scrollFrame.getVerticalScrollBar().setUnitIncrement(16);
-        frame.add(scrollFrame, BorderLayout.CENTER);
-
-        frame.setVisible(true);
+        public User(String id, String name, String role) {
+            this.id = id;
+            this.name = name;
+            this.role = role;
+        }
     }
 
-    // ========== Fungsi Buat Tombol ==========
-    private static JPanel createIconWithText(String iconPath, String labelText, Color textNormal, Color textHover) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setOpaque(false);
-        panel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    public static Map<String, String> userPasswords = new HashMap<>();
+    public static Map<String, String> userRoles = new HashMap<>();
+    public static Map<String, User> users = new HashMap<>();
 
-        ImageIcon rawIcon = new ImageIcon(iconPath);
-        Image scaledImg = rawIcon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
-        JLabel iconLabel = new JLabel(new ImageIcon(scaledImg));
-        iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    public static User currentUser;
 
-        JLabel textLabel = new JLabel(labelText);
-        textLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        textLabel.setForeground(textNormal);
-        textLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    // ================== AKSES ==================
+    public static class AccessPermission {
+        public User user;
+        public String permission;
 
-        panel.add(iconLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 5)));
-        panel.add(textLabel);
+        public AccessPermission(User user, String permission) {
+            this.user = user;
+            this.permission = permission;
+        }
+    }
 
-        // Efek hover
-        panel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                textLabel.setForeground(textHover);
+    // ================== DOKUMEN ==================
+    public static class Doc {
+        public String id;
+        public String title;
+        public String content;
+        public User owner;
+        public Date createdDate;
+        public Date modifiedDate;
+        public Date lastOpenedDate;
+        public int pages;
+        public String fileType;
+        public int fileSizeKB;
+        public String filePath;
+
+        public List<AccessPermission> sharedWith = new ArrayList<>();
+        public String generalAccessGroup = "";
+        public String generalAccessRole = "";
+
+        public Doc(String id, String title, String content, User owner, Date createdDate,
+                   Date modifiedDate, Date lastOpenedDate, int pages,
+                   String fileType, int fileSizeKB, String filePath) {
+            this.id = id;
+            this.title = title;
+            this.content = content;
+            this.owner = owner;
+            this.createdDate = createdDate;
+            this.modifiedDate = modifiedDate;
+            this.lastOpenedDate = lastOpenedDate;
+            this.pages = pages;
+            this.fileType = fileType;
+            this.fileSizeKB = fileSizeKB;
+            this.filePath = filePath;
+        }
+    }
+
+    public static List<Doc> documentList = new ArrayList<>();
+
+    // ================== INISIALISASI ==================
+    static {
+        prepareUsers();
+        currentUser = users.get("phoenixbaker"); // login user
+
+        User michael = users.get("michaelscott");
+
+        // Path dokumen lokal
+        String basePath = "/Users/audrazelvania/Downloads/";
+        String[] filenames = {
+                "K3C_DPPLOO01.pdf", "sinyal analog.png", "sampling_signal.png",
+                "K2_G6_DPPLOO03.pdf", "Instagram Feeds.png", "K3C_DPPLOO06.pdf",
+                "II3130_Milestone 4_K3_T10.pdf", "II2220_ITRiskMgt_18222106_Audra Zelvania.xlsx", "II2220_TugasDF_18222106_Gojek.xlsx",
+                "urea.png"
+        };
+
+        for (int i = 0; i < filenames.length; i++) {
+            File file = new File(basePath + filenames[i]);
+            Date modified = file.exists() ? new Date(file.lastModified()) : new GregorianCalendar(2025, Calendar.MAY, 15).getTime();
+            int size = file.exists() ? (int) (file.length() / 1024) : 250;
+
+            String fileType = "";
+            int dotIndex = filenames[i].lastIndexOf('.');
+            if (dotIndex != -1 && dotIndex < filenames[i].length() - 1) {
+                fileType = filenames[i].substring(dotIndex + 1).toUpperCase();
             }
 
-            @Override
-            public void mouseExited(MouseEvent e) {
-                textLabel.setForeground(textNormal);
-            }
+            Doc doc = new Doc(
+                    "doc" + String.format("%03d", i + 1),
+                    filenames[i].substring(0, dotIndex),
+                    "This is a placeholder content for testing.",
+                    michael,
+                    modified, modified, modified,
+                    (i + 1) * 10,
+                    fileType,
+                    size,
+                    file.getAbsolutePath()
+            );
 
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                System.out.println(labelText + " clicked");
-            }
-        });
+            documentList.add(doc);
+        }
+    }
 
-        return panel;
+    public static void prepareUsers() {
+        userPasswords.put("lanasteiner", "lana123");     userRoles.put("lanasteiner", "Manajer");
+        userPasswords.put("candicewu", "candice123");     userRoles.put("candicewu", "Manajer");
+        userPasswords.put("michaelscott", "michael123");  userRoles.put("michaelscott", "Manajer");
+        userPasswords.put("andreawatson", "andrea123");   userRoles.put("andreawatson", "Manajer");
+        userPasswords.put("jonathanchoi", "jonathan123"); userRoles.put("jonathanchoi", "Manajer");
+        userPasswords.put("oliviarhye", "olivia123");     userRoles.put("oliviarhye", "Karyawan");
+        userPasswords.put("phoenixbaker", "phoenix123");  userRoles.put("phoenixbaker", "Karyawan");
+        userPasswords.put("drewcano", "drew123");          userRoles.put("drewcano", "Karyawan");
+        userPasswords.put("saraperez", "sara123");         userRoles.put("saraperez", "Karyawan");
+        userPasswords.put("kevindarma", "kevin123");       userRoles.put("kevindarma", "Karyawan");
+
+        for (String username : userPasswords.keySet()) {
+            String role = userRoles.get(username);
+            users.put(username, new User(username, username, role));
+        }
+    }
+
+    public static boolean validateLogin(String username, String password) {
+        return userPasswords.containsKey(username) && userPasswords.get(username).equals(password);
+    }
+
+    public static User getUser(String username) {
+        return users.get(username);
+    }
+
+    public static Doc getDocumentById(String id) {
+        for (Doc doc : documentList) {
+            if (doc.id.equals(id)) return doc;
+        }
+        return null;
+    }
+
+    public static boolean hasAccess(Doc doc, User user) {
+        if (doc.owner.id.equals(user.id)) return true;
+        for (AccessPermission ap : doc.sharedWith) {
+            if (ap.user.id.equals(user.id)) return true;
+        }
+        if (user.role.equals(doc.generalAccessGroup)) {
+            return doc.generalAccessRole.equals("Viewer") || doc.generalAccessRole.equals("Editor");
+        }
+        return false;
+    }
+
+    public static boolean canEdit(Doc doc, User user) {
+        if (doc.owner.id.equals(user.id)) return true;
+        for (AccessPermission ap : doc.sharedWith) {
+            if (ap.user.id.equals(user.id) && ap.permission.equals("Editor")) return true;
+        }
+        return user.role.equals(doc.generalAccessGroup) && doc.generalAccessRole.equals("Editor");
     }
 }
