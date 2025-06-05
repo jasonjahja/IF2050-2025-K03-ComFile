@@ -1,288 +1,201 @@
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+package pages.ManageDocuments;
+
+import java.util.*;
 
 public class Document {
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("File Name");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 700);
-        frame.setLocationRelativeTo(null);
-        frame.setLayout(new BorderLayout());
 
-        Color bgSoftLavender = new Color(245, 243, 247);
-        Color textNormal = new Color(55, 40, 80);
-        Color textHover = new Color(90, 70, 120);
+    // ================== USER ==================
+    public static class User {
+        public String id;
+        public String name;
+        public String role;
 
-        frame.getContentPane().setBackground(bgSoftLavender);
-
-        // ========== Header ==========
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(Color.WHITE);
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(220, 218, 230)));
-
-        ImageIcon backIcon = new ImageIcon("src/assets/icon-back.png");
-        Image scaledBack = backIcon.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
-        JLabel backLabel = new JLabel(" File Name", new ImageIcon(scaledBack), JLabel.LEFT);
-        backLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
-        backLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 0));
-        backLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        backLabel.setForeground(textNormal);
-        backLabel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                backLabel.setForeground(textHover);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                backLabel.setForeground(textNormal);
-            }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                System.out.println("Back clicked");
-            }
-        });
-        header.add(backLabel, BorderLayout.WEST);
-
-        JPanel iconPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 40, 10));
-        iconPanel.setOpaque(false);
-        iconPanel.add(createIconWithText("src/assets/icon-sharing.png", "Sharing", textNormal, textHover));
-        iconPanel.add(createIconWithText("src/assets/icon-backup.png", "Backup", textNormal, textHover));
-        iconPanel.add(createIconWithText("src/assets/icon-delete.png", "Delete", textNormal, textHover));
-        header.add(iconPanel, BorderLayout.EAST);
-
-        frame.add(header, BorderLayout.NORTH);
-
-        // ========== Dokumen A4 ==========
-        JPanel outerPanel = new JPanel(new GridBagLayout());
-        outerPanel.setBackground(bgSoftLavender);
-        outerPanel.setBorder(BorderFactory.createEmptyBorder(40, 0, 60, 0));
-
-        JPanel docPanel = new JPanel();
-        docPanel.setPreferredSize(new Dimension(794, 1123));
-        docPanel.setBackground(Color.WHITE);
-        docPanel.setLayout(new BorderLayout());
-        docPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
-
-        JTextArea textArea = new JTextArea("Ensure your data is safe and recoverable. ".repeat(100));
-        textArea.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        textArea.setLineWrap(true);
-        textArea.setWrapStyleWord(true);
-        textArea.setOpaque(false);
-        textArea.setEditable(false);
-        textArea.setFocusable(false);
-        textArea.getCaret().setVisible(false);
-
-        JScrollPane docScrollPane = new JScrollPane(textArea);
-        docScrollPane.setBorder(null);
-        docScrollPane.setOpaque(false);
-        docScrollPane.getViewport().setOpaque(false);
-
-        docPanel.add(docScrollPane, BorderLayout.CENTER);
-        outerPanel.add(docPanel);
-
-        JScrollPane scrollFrame = new JScrollPane(outerPanel);
-        scrollFrame.setBorder(null);
-        scrollFrame.getVerticalScrollBar().setUnitIncrement(16);
-        frame.add(scrollFrame, BorderLayout.CENTER);
-
-        frame.setVisible(true);
+        public User(String id, String name, String role) {
+            this.id = id;
+            this.name = name;
+            this.role = role;
+        }
     }
 
-    // ========== Fungsi Buat Tombol ==========
-    private static JPanel createIconWithText(String iconPath, String labelText, Color textNormal, Color textHover) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setOpaque(false);
-        panel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    public static Map<String, String> userPasswords = new HashMap<>();
+    public static Map<String, String> userRoles = new HashMap<>();
+    public static Map<String, User> users = new HashMap<>();
 
-        ImageIcon rawIcon = new ImageIcon(iconPath);
-        Image scaledImg = rawIcon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
-        JLabel iconLabel = new JLabel(new ImageIcon(scaledImg));
-        iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    public static User currentUser;
 
-        JLabel textLabel = new JLabel(labelText);
-        textLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        textLabel.setForeground(textNormal);
-        textLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    // ================== AKSES ==================
+    public static class AccessPermission {
+        public User user;
+        public String permission;
 
-        panel.add(iconLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 5)));
-        panel.add(textLabel);
-
-        // Efek hover
-        panel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                textLabel.setForeground(textHover);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                textLabel.setForeground(textNormal);
-            }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (labelText.equals("Delete")) {
-                    showDeleteConfirmation(SwingUtilities.getWindowAncestor(panel));
-                } else {
-                    System.out.println(labelText + " clicked");
-                }
-            }
-        });
-
-        return panel;
+        public AccessPermission(User user, String permission) {
+            this.user = user;
+            this.permission = permission;
+        }
     }
 
-    // ========== Delete Confirmation Dialog ==========
-    private static void showDeleteConfirmation(Window parent) {
-        // Custom colors
-        Color dangerColor = new Color(214, 41, 85);  // Bright pink/red color
-        Color textColor = new Color(67, 63, 78);     // Dark gray for text
-        
-        // Create glass pane for dark overlay
-        JPanel glassPane = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                g.setColor(new Color(0, 0, 0, 150)); // Semi-transparent black
-                g.fillRect(0, 0, getWidth(), getHeight());
-            }
-        };
-        glassPane.setOpaque(false);
-        ((JFrame) parent).setGlassPane(glassPane);
-        glassPane.setVisible(true);
-        
-        // Create custom dialog
-        JDialog dialog = new JDialog((JFrame)parent, "", true);
-        dialog.setUndecorated(true); // Remove window decorations
-        dialog.setBackground(Color.WHITE);
-        
-        // Main panel with rounded corners
-        JPanel mainPanel = new JPanel(new BorderLayout(0, 20)) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 32, 32);
-                g2.dispose();
-            }
-        };
-        mainPanel.setBackground(Color.WHITE);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+    // ================== DOKUMEN ==================
+    public static class Doc {
+        public String id;
+        public String title;
+        public String content;
+        public User owner;
+        public Date createdDate;
+        public Date modifiedDate;
+        public Date lastOpenedDate;
+        public int pages;
+        public String fileType;
+        public int fileSizeKB;
 
-        // Center content panel
-        JPanel centerPanel = new JPanel();
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-        centerPanel.setBackground(Color.WHITE);
+        public List<AccessPermission> sharedWith = new ArrayList<>();
+        public String generalAccessGroup = "";
+        public String generalAccessRole = "";
 
-        // Delete illustration
-        ImageIcon deleteIcon = new ImageIcon("img/delete-illustration.png");
-        Image scaledImage = deleteIcon.getImage().getScaledInstance(180, 180, Image.SCALE_SMOOTH);
-        JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
-        imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Text content
-        JPanel textPanel = new JPanel();
-        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
-        textPanel.setBackground(Color.WHITE);
-        
-        JLabel warningLabel = new JLabel("<html><div style='text-align: center;'>This action cannot be <span style='color: rgb(214, 41, 85);'>undone</span>. Deleting this item<br/>will <span style='color: rgb(214, 41, 85);'>permanently remove</span> it from your account.</div></html>");
-        warningLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        warningLabel.setForeground(textColor);
-        warningLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel confirmLabel = new JLabel("Are you sure you want to proceed?");
-        confirmLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        confirmLabel.setForeground(textColor);
-        confirmLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Add components with proper spacing
-        centerPanel.add(Box.createVerticalStrut(20));
-        centerPanel.add(imageLabel);
-        centerPanel.add(Box.createVerticalStrut(30));
-        centerPanel.add(warningLabel);
-        centerPanel.add(Box.createVerticalStrut(10));
-        centerPanel.add(confirmLabel);
-        centerPanel.add(Box.createVerticalStrut(30));
-        
-        mainPanel.add(centerPanel, BorderLayout.CENTER);
+        public Doc(String id, String title, String content, User owner, Date createdDate, Date modifiedDate, Date lastOpenedDate, int pages, String fileType, int fileSizeKB) {
+            this.id = id;
+            this.title = title;
+            this.content = content;
+            this.owner = owner;
+            this.createdDate = createdDate;
+            this.modifiedDate = modifiedDate;
+            this.lastOpenedDate = lastOpenedDate;
+            this.pages = pages;
+            this.fileType = fileType;
+            this.fileSizeKB = fileSizeKB;
+        }
+    }
 
-        // Button panel
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 0, 10));
-        buttonPanel.setBackground(Color.WHITE);
+    public static List<Doc> documentList = new ArrayList<>();
 
-        // Delete button
-        JButton deleteButton = new JButton("Delete Document") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        deleteButton.setBackground(dangerColor);
-        deleteButton.setForeground(Color.WHITE);
-        deleteButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        deleteButton.setBorder(BorderFactory.createEmptyBorder(12, 0, 12, 0));
-        deleteButton.setFocusPainted(false);
-        deleteButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        deleteButton.setContentAreaFilled(false);
-        
-        // Cancel button
-        JButton cancelButton = new JButton("Cancel") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
-                g2.setColor(dangerColor);
-                g2.setStroke(new BasicStroke(1));
-                g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 16, 16);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        cancelButton.setForeground(dangerColor);
-        cancelButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        cancelButton.setBorder(BorderFactory.createEmptyBorder(12, 0, 12, 0));
-        cancelButton.setFocusPainted(false);
-        cancelButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        cancelButton.setContentAreaFilled(false);
+    // ================== INISIALISASI ==================
+    static {
+        prepareUsers();
 
-        // Add button actions
-        deleteButton.addActionListener(e -> {
-            System.out.println("Document deleted");
-            glassPane.setVisible(false);
-            dialog.dispose();
-        });
-        
-        cancelButton.addActionListener(e -> {
-            glassPane.setVisible(false);
-            dialog.dispose();
-        });
-        
-        buttonPanel.add(deleteButton);
-        buttonPanel.add(cancelButton);
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        // Simulasi user login
+        currentUser = users.get("phoenixbaker"); // misal phoenixbaker login
 
-        // Add shadow border to the main panel
-        mainPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createEmptyBorder(10, 10, 10, 10),
-            mainPanel.getBorder()
-        ));
+        User michael = users.get("michaelscott");
+        User lana = users.get("lanasteiner");
+        User candice = users.get("candicewu");
+        User olivia = users.get("oliviarhye");
 
-        dialog.add(mainPanel);
-        dialog.pack();
-        dialog.setLocationRelativeTo(parent);
-        dialog.setVisible(true);
+        Date sampleDate = new GregorianCalendar(2025, Calendar.MAY, 15).getTime();
+
+// === Document 1 ===
+        Doc doc001 = new Doc("doc001", "K3C_DPPLOO02", "Ensure your data is safe and recoverable. ".repeat(83), michael, sampleDate, sampleDate, sampleDate, 83, "PDF", 484);
+        doc001.sharedWith.add(new AccessPermission(users.get("phoenixbaker"), "Editor"));
+        doc001.generalAccessGroup = "Karyawan";
+        doc001.generalAccessRole = "Viewer";
+        documentList.add(doc001);
+
+// === Document 2 ===
+        Doc doc002 = new Doc("doc002", "Document1", "Lorem ipsum dolor sit amet. ".repeat(64), lana, sampleDate, sampleDate, sampleDate, 64, "DOCX", 320);
+        doc002.sharedWith.add(new AccessPermission(users.get("drewcano"), "Viewer"));
+        documentList.add(doc002);
+
+// === Document 3 ===
+        Doc doc003 = new Doc("doc003", "Document2", "Company policy update Q1. ".repeat(40), lana, sampleDate, sampleDate, sampleDate,  40, "XLSX", 210);
+        doc003.generalAccessGroup = "Manajer";
+        doc003.generalAccessRole = "Editor";
+        documentList.add(doc003);
+
+// === Document 4 ===
+        Doc doc004 = new Doc("doc004", "Project Plan", "Initial project plan and goals. ".repeat(48), candice, sampleDate, sampleDate, sampleDate, 48, "Image", 200);
+        doc004.sharedWith.add(new AccessPermission(users.get("kevindarma"), "Editor"));
+        documentList.add(doc004);
+
+// === Document 5 ===
+        Doc doc005 = new Doc("doc005", "Meeting Notes", "Meeting notes from 10 May. ".repeat(30), michael, sampleDate, sampleDate, sampleDate, 30, "PDF", 250);
+        doc005.generalAccessGroup = "Karyawan";
+        doc005.generalAccessRole = "Viewer";
+        documentList.add(doc005);
+
+// === Document 6 ===
+        Doc doc006 = new Doc("doc006", "Client Brief", "Client needs and requests. ".repeat(30), olivia, sampleDate, sampleDate, sampleDate, 30, "XLSX", 340);
+        doc006.sharedWith.add(new AccessPermission(users.get("andreawatson"), "Editor"));
+        documentList.add(doc006);
+
+// === Document 7 ===
+        Doc doc007 = new Doc("doc007", "Training Module", "Employee onboarding materials. ".repeat(70), lana, sampleDate, sampleDate, sampleDate, 70, "DOCX", 414);
+        doc007.generalAccessGroup = "Karyawan";
+        doc007.generalAccessRole = "Editor";
+        documentList.add(doc007);
+
+// === Document 8 ===
+        Doc doc008 = new Doc("doc008", "Security Protocol", "Updated security protocol v2. ".repeat(65), candice, sampleDate, sampleDate, sampleDate, 65, "PDF", 250);
+        doc008.sharedWith.add(new AccessPermission(users.get("phoenixbaker"), "Viewer"));
+        documentList.add(doc008);
+
+// === Document 9 ===
+        Doc doc009 = new Doc("doc009", "Survey Results", "Employee satisfaction survey results. ".repeat(55), michael, sampleDate, sampleDate, sampleDate, 55, "PDF", 250);
+        doc009.generalAccessGroup = "Manajer";
+        doc009.generalAccessRole = "Viewer";
+        documentList.add(doc009);
+
+// === Document 10 ===
+        Doc doc010 = new Doc("doc010", "Design Draft", "UI design draft for client X. ".repeat(35), olivia, sampleDate, sampleDate, sampleDate, 35, "IMAGE", 250);
+        doc010.sharedWith.add(new AccessPermission(users.get("jonathanchoi"), "Editor"));
+        documentList.add(doc010);
+    }
+
+    public static void prepareUsers() {
+        userPasswords.put("lanasteiner", "lana123");     userRoles.put("lanasteiner", "Manajer");
+        userPasswords.put("candicewu", "candice123");     userRoles.put("candicewu", "Manajer");
+        userPasswords.put("michaelscott", "michael123");  userRoles.put("michaelscott", "Manajer");
+        userPasswords.put("andreawatson", "andrea123");   userRoles.put("andreawatson", "Manajer");
+        userPasswords.put("jonathanchoi", "jonathan123"); userRoles.put("jonathanchoi", "Manajer");
+        userPasswords.put("oliviarhye", "olivia123");     userRoles.put("oliviarhye", "Karyawan");
+        userPasswords.put("phoenixbaker", "phoenix123");  userRoles.put("phoenixbaker", "Karyawan");
+        userPasswords.put("drewcano", "drew123");          userRoles.put("drewcano", "Karyawan");
+        userPasswords.put("saraperez", "sara123");         userRoles.put("saraperez", "Karyawan");
+        userPasswords.put("kevindarma", "kevin123");       userRoles.put("kevindarma", "Karyawan");
+
+        // Masukkan ke users map
+        for (String username : userPasswords.keySet()) {
+            String role = userRoles.get(username);
+            users.put(username, new User(username, username, role));
+        }
+    }
+
+    // ================== UTIL FUNGSIONALITAS ==================
+
+    public static boolean validateLogin(String username, String password) {
+        return userPasswords.containsKey(username) && userPasswords.get(username).equals(password);
+    }
+
+    public static User getUser(String username) {
+        return users.get(username);
+    }
+
+    public static Doc getDocumentById(String id) {
+        for (Doc doc : documentList) {
+            if (doc.id.equals(id)) return doc;
+        }
+        return null;
+    }
+
+    public static boolean hasAccess(Doc doc, User user) {
+        if (doc.owner.id.equals(user.id)) return true;
+
+        for (AccessPermission ap : doc.sharedWith) {
+            if (ap.user.id.equals(user.id)) return true;
+        }
+
+        if (user.role.equals(doc.generalAccessGroup)) {
+            return doc.generalAccessRole.equals("Viewer") || doc.generalAccessRole.equals("Editor");
+        }
+
+        return false;
+    }
+
+    public static boolean canEdit(Doc doc, User user) {
+        if (doc.owner.id.equals(user.id)) return true;
+
+        for (AccessPermission ap : doc.sharedWith) {
+            if (ap.user.id.equals(user.id) && ap.permission.equals("Editor")) return true;
+        }
+
+        return user.role.equals(doc.generalAccessGroup) &&
+                doc.generalAccessRole.equals("Editor");
     }
 }
