@@ -1,4 +1,3 @@
-import Dashboard.SearchDocuments;
 import components.NavigationBar;
 import javax.swing.*;
 import java.awt.*;
@@ -41,7 +40,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
     private void createPages() {
         // Create Documents page
         // Pages
-        SearchDocuments documentsPage = new SearchDocuments();
+        MyDocuments documentsPage = new MyDocuments();
 
         // Create placeholder pages
         JPanel homePage = createPlaceholderPage("Home Page", "Welcome to the Document Management System");

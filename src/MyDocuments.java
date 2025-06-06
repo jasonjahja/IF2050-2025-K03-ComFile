@@ -6,17 +6,15 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-public class MyDocuments extends JFrame {
+public class MyDocuments extends JPanel {
     private Color defaultBorderColor = new Color(200, 200, 200);
     private Color hoverBorderColor = new Color(90, 106, 207);
 
     private JPanel documentPanel;
 
     public MyDocuments() {
-        setTitle("My Documents");
-        setSize(1080, 720);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
 
         // ===== Main Panel =====
         JPanel mainPanel = new JPanel(new BorderLayout());
@@ -30,12 +28,23 @@ public class MyDocuments extends JFrame {
         JLabel title = new JLabel("My Documents");
         title.setFont(new Font("Arial", Font.BOLD, 28));
 
-        JButton addButton = new JButton("+ Add Document");
+        JButton addButton = new JButton("+ Add Document") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
         addButton.setBackground(new Color(90, 106, 207));
         addButton.setForeground(Color.WHITE);
         addButton.setFocusPainted(false);
-        addButton.setOpaque(true);
-        addButton.setContentAreaFilled(true);
+        addButton.setBorderPainted(false);
+        addButton.setOpaque(false);
+        addButton.setContentAreaFilled(false);
         addButton.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
         addButton.setFont(new Font("Arial", Font.BOLD, 14));
 
@@ -73,15 +82,10 @@ public class MyDocuments extends JFrame {
         mainPanel.add(new JScrollPane(documentPanel), BorderLayout.CENTER);
 
         add(mainPanel);
-        setVisible(true);
 
-        // Auto refresh saat window aktif
-        addWindowFocusListener(new WindowAdapter() {
-            @Override
-            public void windowGainedFocus(WindowEvent e) {
-                refreshDocuments();
-            }
-        });
+        // Remove window focus listener since it's not applicable to JPanel
+        // Instead, we'll provide a public method to refresh the documents
+        refreshDocuments();
     }
 
     private void populateDocuments() {
