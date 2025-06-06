@@ -6,15 +6,17 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-public class MyDocuments extends JPanel {
+public class MyDocuments extends JFrame {
     private Color defaultBorderColor = new Color(200, 200, 200);
     private Color hoverBorderColor = new Color(90, 106, 207);
 
     private JPanel documentPanel;
 
     public MyDocuments() {
-        setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setTitle("My Documents");
+        setSize(1080, 720);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
 
         // ===== Main Panel =====
         JPanel mainPanel = new JPanel(new BorderLayout());
@@ -28,23 +30,12 @@ public class MyDocuments extends JPanel {
         JLabel title = new JLabel("My Documents");
         title.setFont(new Font("Arial", Font.BOLD, 28));
 
-        JButton addButton = new JButton("+ Add Document") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
+        JButton addButton = new JButton("+ Add Document");
         addButton.setBackground(new Color(90, 106, 207));
         addButton.setForeground(Color.WHITE);
         addButton.setFocusPainted(false);
-        addButton.setBorderPainted(false);
-        addButton.setOpaque(false);
-        addButton.setContentAreaFilled(false);
+        addButton.setOpaque(true);
+        addButton.setContentAreaFilled(true);
         addButton.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
         addButton.setFont(new Font("Arial", Font.BOLD, 14));
 
@@ -78,14 +69,21 @@ public class MyDocuments extends JPanel {
         populateDocuments();  // Memuat isi dokumen dari DocumentStorage
 
         // ===== Main Layout =====
+        JScrollPane scrollPane = new JScrollPane(documentPanel);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());  // ⬅️ Hilangkan garis bawah
         mainPanel.add(headerPanel, BorderLayout.NORTH);
-        mainPanel.add(new JScrollPane(documentPanel), BorderLayout.CENTER);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
 
         add(mainPanel);
+        setVisible(true);
 
-        // Remove window focus listener since it's not applicable to JPanel
-        // Instead, we'll provide a public method to refresh the documents
-        refreshDocuments();
+        // Auto refresh saat window aktif
+        addWindowFocusListener(new WindowAdapter() {
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+                refreshDocuments();
+            }
+        });
     }
 
     private void populateDocuments() {
@@ -112,18 +110,17 @@ public class MyDocuments extends JPanel {
 
     private JPanel createDummyCard(String titleText, String dateText) {
         JPanel docCard = new JPanel(new BorderLayout());
-        docCard.setPreferredSize(new Dimension(180, 240));  // ⬅️ lebih kecil
+        docCard.setPreferredSize(new Dimension(180, 240));
         docCard.setBackground(Color.WHITE);
         docCard.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(defaultBorderColor),
                 BorderFactory.createEmptyBorder(1, 1, 1, 1)
         ));
 
-        // Image
         ImageIcon docImage = new ImageIcon("img/doc-thumb.png");
         JPanel imageContainer = new JPanel(new BorderLayout());
         imageContainer.setBackground(Color.WHITE);
-        imageContainer.setPreferredSize(new Dimension(160, 180));  // ⬅️ smaller preview
+        imageContainer.setPreferredSize(new Dimension(160, 180));
 
         if (docImage.getImageLoadStatus() == MediaTracker.ERRORED) {
             JLabel docPlaceholder = new JLabel("📄");
@@ -140,7 +137,6 @@ public class MyDocuments extends JPanel {
         imageContainer.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         docCard.add(imageContainer, BorderLayout.CENTER);
 
-        // Label Panel
         JPanel labelPanel = new JPanel();
         labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.Y_AXIS));
         labelPanel.setBackground(Color.WHITE);
@@ -157,7 +153,6 @@ public class MyDocuments extends JPanel {
         labelPanel.add(docDate);
         docCard.add(labelPanel, BorderLayout.SOUTH);
 
-        // Hover effect
         docCard.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 docCard.setBorder(BorderFactory.createCompoundBorder(
@@ -188,11 +183,6 @@ public class MyDocuments extends JPanel {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new MyDocuments();
-            }
-        });
+        SwingUtilities.invokeLater(() -> new MyDocuments());
     }
 }

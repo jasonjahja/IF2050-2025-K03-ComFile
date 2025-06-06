@@ -74,41 +74,32 @@ public class UploadDocumentUI extends JFrame {
         dragDropText.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Upload button
-        JButton uploadButton = new JButton("+ Upload Document") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
+        JButton uploadButton = new JButton("+ Upload Document");
         uploadButton.setFont(new Font("SansSerif", Font.BOLD, 12));
         uploadButton.setForeground(Color.WHITE);
-        uploadButton.setBackground(new Color(90, 106, 207));  // Same color as Add Document button
+        uploadButton.setBackground(Color.decode("#5A6ACF"));
         uploadButton.setFocusPainted(false);
-        uploadButton.setBorderPainted(false);
-        uploadButton.setOpaque(false);
-        uploadButton.setContentAreaFilled(false);
         uploadButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         uploadButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         uploadButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         uploadButton.setPreferredSize(new Dimension(180, 40));
         uploadButton.setMinimumSize(new Dimension(180, 40));
         uploadButton.setMaximumSize(new Dimension(180, 40));
+        uploadButton.setOpaque(true);
 
         // Hover effect
         uploadButton.addMouseListener(new MouseAdapter() {
+            private final Color defaultColor = Color.decode("#5A6ACF");
+            private final Color hoverColor = Color.decode("#4857B0");
+
             @Override
             public void mouseEntered(MouseEvent e) {
-                uploadButton.setBackground(new Color(70, 86, 187));  // Darker shade for hover
+                uploadButton.setBackground(hoverColor);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                uploadButton.setBackground(new Color(90, 106, 207));  // Back to original color
+                uploadButton.setBackground(defaultColor);
             }
         });
 
@@ -218,5 +209,4 @@ public class UploadDocumentUI extends JFrame {
         });
     }
 }
-
 
