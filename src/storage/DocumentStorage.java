@@ -1,3 +1,4 @@
+package storage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,7 +13,7 @@ public class DocumentStorage {
     public static List<File> uploadedDocuments = new ArrayList<>();
     
     // Directory untuk menyimpan file yang diupload
-    private static final String UPLOAD_DIR = "uploads";
+    private static final String UPLOAD_DIR = "src/uploads";
     
     // Inisialisasi directory uploads jika belum ada
     static {

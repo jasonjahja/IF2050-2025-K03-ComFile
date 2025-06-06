@@ -1,5 +1,9 @@
+package pages.ManageDocuments;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+
+import storage.DocumentStorage;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -74,18 +78,37 @@ public class UploadDocumentUI extends JFrame {
         dragDropText.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Upload button
-        JButton uploadButton = new JButton("+ Upload Document");
-        uploadButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        JButton uploadButton = new JButton("+ Upload Document") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8); // rounded rectangle
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+
+        uploadButton.setBackground(Color.decode("#5A6ACF")); // biru sesuai warna kamu
         uploadButton.setForeground(Color.WHITE);
-        uploadButton.setBackground(Color.decode("#5A6ACF"));
         uploadButton.setFocusPainted(false);
         uploadButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Custom behavior: no border, no default background fill
+        uploadButton.setOpaque(false);
+        uploadButton.setContentAreaFilled(false);
+        uploadButton.setBorderPainted(false);
+
+        // Padding & font
         uploadButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        uploadButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+        // Optional: size lock
         uploadButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         uploadButton.setPreferredSize(new Dimension(180, 40));
         uploadButton.setMinimumSize(new Dimension(180, 40));
         uploadButton.setMaximumSize(new Dimension(180, 40));
-        uploadButton.setOpaque(true);
 
         // Hover effect
         uploadButton.addMouseListener(new MouseAdapter() {
@@ -193,6 +216,68 @@ public class UploadDocumentUI extends JFrame {
         add(mainWrapper);
         setVisible(true);
     }
+
+    public UploadDocumentUI(Runnable onUploadComplete) {
+        this(); // panggil constructor utama untuk membangun UI
+
+        // Ambil ulang tombol "upload" dari UI yang sudah dibuat
+        JButton uploadButton = findUploadButton(this.getContentPane());
+
+        if (uploadButton != null) {
+            // Hapus semua listener default dari constructor pertama
+            for (ActionListener al : uploadButton.getActionListeners()) {
+                uploadButton.removeActionListener(al);
+            }
+
+            // Tambahkan action baru dengan callback
+            uploadButton.addActionListener(e -> {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Select a document to upload");
+
+                int result = fileChooser.showOpenDialog(this);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+
+                    long maxSize = 10L * 1024 * 1024;
+                    if (selectedFile.length() > maxSize) {
+                        JOptionPane.showMessageDialog(this, "File size exceeds 10MB", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    if (DocumentStorage.isDocumentExists(selectedFile.getName())) {
+                        JOptionPane.showMessageDialog(this, "Duplicate file name", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    if (DocumentStorage.storeDocument(selectedFile)) {
+                        JOptionPane.showMessageDialog(this, "Upload successful", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        if (onUploadComplete != null) {
+                            onUploadComplete.run(); // ✅ Refresh dokumen
+                        }
+                        dispose(); // Tutup window
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Upload failed", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+        }
+    }
+
+    private JButton findUploadButton(Container container) {
+        for (Component comp : container.getComponents()) {
+            if (comp instanceof JButton) {
+                JButton btn = (JButton) comp;
+                if (btn.getText().contains("Upload")) {
+                    return btn;
+                }
+            } else if (comp instanceof Container) {
+                JButton btn = findUploadButton((Container) comp);
+                if (btn != null) return btn;
+            }
+        }
+        return null;
+    }
+
 
     public static void main(String[] args) {
         try {

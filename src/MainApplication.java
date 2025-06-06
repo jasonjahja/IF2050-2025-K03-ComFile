@@ -1,5 +1,8 @@
 import components.NavigationBar;
+import pages.ManageDocuments.MyDocuments;
+
 import javax.swing.*;
+
 import java.awt.*;
 
 public class MainApplication extends JFrame implements NavigationBar.NavigationListener {
