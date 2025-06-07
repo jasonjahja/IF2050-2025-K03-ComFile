@@ -11,6 +11,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.net.URL;
 
 public class MyDocuments extends JPanel {
     private JPanel documentsGrid;
@@ -28,8 +29,8 @@ public class MyDocuments extends JPanel {
         setBackground(new Color(248, 249, 250));
         setLayout(new BorderLayout());
 
-        FlowLayout flowLayout = new FlowLayout(FlowLayout.LEFT, 20, 20);
-        documentsGrid = new JPanel(flowLayout);
+        // Menggunakan GridLayout untuk tampilan grid
+        documentsGrid = new JPanel(new GridLayout(0, 4, 20, 20));
         documentsGrid.setBackground(new Color(248, 249, 250));
         documentsGrid.setBorder(new EmptyBorder(20, 20, 20, 20));
     }
@@ -111,8 +112,210 @@ public class MyDocuments extends JPanel {
         });
 
         addButton.addActionListener(e -> {
-            new UploadDocumentUI(() -> refreshDocuments());
+            JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+            
+            // Buat panel semi-transparan untuk background gelap
+            JPanel darkOverlay = new JPanel(new GridBagLayout()) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    g.setColor(new Color(0, 0, 0, 180));
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            };
+            darkOverlay.setOpaque(false);
+            
+            // Buat dialog upload
+            JPanel uploadPanel = new JPanel(new BorderLayout()) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(getBackground());
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                    
+                    // Draw border
+                    g2.setColor(new Color(200, 200, 200));
+                    g2.setStroke(new BasicStroke(2));
+                    g2.drawRoundRect(1, 1, getWidth()-3, getHeight()-3, 20, 20);
+                    
+                    g2.dispose();
+                }
+                
+                @Override
+                public void paintBorder(Graphics g) {
+                    // Don't paint the default border
+                }
+            };
+            uploadPanel.setBackground(Color.WHITE);
+            uploadPanel.setOpaque(false);
+            
+            // Header Panel
+            JPanel uploadHeaderPanel = new JPanel(new BorderLayout());
+            uploadHeaderPanel.setBackground(Color.WHITE);
+            uploadHeaderPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
+
+            JLabel titleLabel = new JLabel("Upload Document");
+            titleLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+            
+            JButton closeButton = new JButton("×");
+            closeButton.setFont(new Font("SansSerif", Font.PLAIN, 24));
+            closeButton.setForeground(new Color(100, 100, 100));
+            closeButton.setBorderPainted(false);
+            closeButton.setContentAreaFilled(false);
+            closeButton.setFocusPainted(false);
+            closeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            closeButton.addActionListener(event -> {
+                topFrame.getGlassPane().setVisible(false);
+            });
+            
+            uploadHeaderPanel.add(titleLabel, BorderLayout.WEST);
+            uploadHeaderPanel.add(closeButton, BorderLayout.EAST);
+            
+            // Content Panel
+            JPanel contentPanel = new JPanel();
+            contentPanel.setBackground(Color.WHITE);
+            contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+            contentPanel.setBorder(new EmptyBorder(20, 40, 30, 40));
+            
+            // Upload area dengan border putus-putus
+            JPanel uploadArea = new JPanel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    super.paintComponent(g);
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    
+                    // Draw dashed rounded rectangle
+                    Stroke dashed = new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{5}, 0);
+                    g2.setStroke(dashed);
+                    g2.setColor(new Color(200, 200, 200));
+                    g2.drawRoundRect(1, 1, getWidth()-2, getHeight()-2, 20, 20);
+                    g2.dispose();
+                }
+            };
+            uploadArea.setLayout(new BoxLayout(uploadArea, BoxLayout.Y_AXIS));
+            uploadArea.setBackground(Color.WHITE);
+            uploadArea.setPreferredSize(new Dimension(500, 300));
+            
+            // Cloud icon
+            JLabel iconLabel = new JLabel();
+            try {
+                URL imageUrl = getClass().getClassLoader().getResource("img/cloud.png");
+                if (imageUrl != null) {
+                    ImageIcon icon = new ImageIcon(imageUrl);
+                    Image scaled = icon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
+                    iconLabel.setIcon(new ImageIcon(scaled));
+                }
+            } catch (Exception ex) {
+                iconLabel.setText("☁️");
+                iconLabel.setFont(new Font("SansSerif", Font.PLAIN, 48));
+            }
+            iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            
+            JLabel selectText = new JLabel("Select a document to upload");
+            selectText.setFont(new Font("SansSerif", Font.PLAIN, 16));
+            selectText.setAlignmentX(Component.CENTER_ALIGNMENT);
+            
+            JLabel dragDropText = new JLabel("or drag and drop it here");
+            dragDropText.setFont(new Font("SansSerif", Font.PLAIN, 12));
+            dragDropText.setForeground(new Color(150, 150, 150));
+            dragDropText.setAlignmentX(Component.CENTER_ALIGNMENT);
+            
+            JButton uploadButton = new JButton("+ Upload Document") {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(getBackground());
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                    g2.dispose();
+                    super.paintComponent(g);
+                }
+            };
+            uploadButton.setBackground(new Color(90, 106, 207));
+            uploadButton.setForeground(Color.WHITE);
+            uploadButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+            uploadButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+            uploadButton.setFocusPainted(false);
+            uploadButton.setContentAreaFilled(false);
+            uploadButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+            
+            uploadButton.addActionListener(event -> {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Select a document to upload");
+                
+                int result = fileChooser.showOpenDialog(topFrame);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+                    
+                    // Check file size
+                    long maxSize = 10L * 1024 * 1024;
+                    if (selectedFile.length() > maxSize) {
+                        JOptionPane.showMessageDialog(
+                            topFrame,
+                            "File size exceeds maximum limit of 10 MB",
+                            "Upload Failed",
+                            JOptionPane.ERROR_MESSAGE
+                        );
+                        return;
+                    }
+                    
+                    // Check if file exists
+                    if (DocumentStorage.isDocumentExists(selectedFile.getName())) {
+                        JOptionPane.showMessageDialog(
+                            topFrame,
+                            "A file with the same name already exists",
+                            "Upload Failed",
+                            JOptionPane.ERROR_MESSAGE
+                        );
+                        return;
+                    }
+                    
+                    // Upload file
+                    if (DocumentStorage.storeDocument(selectedFile)) {
+                        refreshDocuments();
+                        topFrame.getGlassPane().setVisible(false);
+                    } else {
+                        JOptionPane.showMessageDialog(
+                            topFrame,
+                            "Failed to store the file",
+                            "Upload Failed",
+                            JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
+            });
+            
+            JLabel sizeText = new JLabel("Maximum upload size 10 MB");
+            sizeText.setFont(new Font("SansSerif", Font.PLAIN, 12));
+            sizeText.setForeground(new Color(150, 150, 150));
+            sizeText.setAlignmentX(Component.CENTER_ALIGNMENT);
+            
+            uploadArea.add(Box.createVerticalStrut(40));
+            uploadArea.add(iconLabel);
+            uploadArea.add(Box.createVerticalStrut(20));
+            uploadArea.add(selectText);
+            uploadArea.add(Box.createVerticalStrut(5));
+            uploadArea.add(dragDropText);
+            uploadArea.add(Box.createVerticalStrut(30));
+            uploadArea.add(uploadButton);
+            uploadArea.add(Box.createVerticalStrut(5));
+            uploadArea.add(sizeText);
+            uploadArea.add(Box.createVerticalStrut(20));  // Tambah jarak ke bawah
+            
+            contentPanel.add(uploadArea);
+            
+            uploadPanel.add(uploadHeaderPanel, BorderLayout.NORTH);
+            uploadPanel.add(contentPanel, BorderLayout.CENTER);
+            
+            // Add components to dark overlay
+            darkOverlay.add(uploadPanel);
+            
+            // Set up glass pane
+            topFrame.setGlassPane(darkOverlay);
+            topFrame.getGlassPane().setVisible(true);
         });
+        
 
         headerPanel.add(title, BorderLayout.WEST);
         headerPanel.add(addButton, BorderLayout.EAST);
@@ -160,89 +363,155 @@ public class MyDocuments extends JPanel {
 
     private JPanel createDocumentCard(String titleText, String dateText) {
         JPanel docCard = new JPanel(new BorderLayout());
-        docCard.setPreferredSize(new Dimension(180, 240));
+        docCard.setPreferredSize(new Dimension(200, 280));
         docCard.setBackground(Color.WHITE);
         docCard.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(defaultBorderColor),
-                BorderFactory.createEmptyBorder(1, 1, 1, 1)
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
+        // Load thumbnail
+        ImageIcon docImage = null;
+        try {
+            URL imageUrl = getClass().getClassLoader().getResource("img/doc-thumb.png");
+            if (imageUrl != null) {
+                docImage = new ImageIcon(imageUrl);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        ImageIcon docImage = new ImageIcon("img/doc-thumb.png");
         JPanel imageContainer = new JPanel(new BorderLayout());
         imageContainer.setBackground(Color.WHITE);
-        imageContainer.setPreferredSize(new Dimension(160, 180));
+        imageContainer.setPreferredSize(new Dimension(180, 200));
 
-
-        if (docImage.getImageLoadStatus() == MediaTracker.ERRORED) {
+        if (docImage == null || docImage.getImageLoadStatus() == MediaTracker.ERRORED) {
             JLabel docPlaceholder = new JLabel("📄");
             docPlaceholder.setFont(new Font("Arial", Font.PLAIN, 64));
             docPlaceholder.setHorizontalAlignment(SwingConstants.CENTER);
             imageContainer.add(docPlaceholder, BorderLayout.CENTER);
         } else {
-            Image scaledDoc = docImage.getImage().getScaledInstance(140, 160, Image.SCALE_SMOOTH);
+            Image scaledDoc = docImage.getImage().getScaledInstance(160, 180, Image.SCALE_SMOOTH);
             JLabel docImageLabel = new JLabel(new ImageIcon(scaledDoc));
             docImageLabel.setHorizontalAlignment(SwingConstants.CENTER);
             imageContainer.add(docImageLabel, BorderLayout.CENTER);
         }
 
-
         imageContainer.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         docCard.add(imageContainer, BorderLayout.CENTER);
 
-
-        JPanel labelPanel = new JPanel();
-        labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.Y_AXIS));
-        labelPanel.setBackground(Color.WHITE);
-
+        // Info Panel (Title + Date)
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setBackground(Color.WHITE);
 
         JLabel docTitle = new JLabel(titleText);
         docTitle.setFont(new Font("Arial", Font.BOLD, 13));
-        docTitle.setBorder(new EmptyBorder(5, 10, 0, 0));
-
+        docTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        docTitle.setBorder(new EmptyBorder(5, 0, 2, 0));
 
         JLabel docDate = new JLabel(dateText);
         docDate.setFont(new Font("Arial", Font.PLAIN, 11));
-        docDate.setBorder(new EmptyBorder(0, 10, 10, 0));
+        docDate.setForeground(new Color(100, 100, 100));
+        docDate.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        infoPanel.add(docTitle);
+        infoPanel.add(docDate);
 
-        labelPanel.add(docTitle);
-        labelPanel.add(docDate);
-        docCard.add(labelPanel, BorderLayout.SOUTH);
+        // Bottom Panel (Info + Options)
+        JPanel bottomPanel = new JPanel(new BorderLayout(10, 0));
+        bottomPanel.setBackground(Color.WHITE);
+        bottomPanel.add(infoPanel, BorderLayout.CENTER);
 
+        // Options Button
+        JLabel optionsLabel = new JLabel("⋮");
+        optionsLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        optionsLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        bottomPanel.add(optionsLabel, BorderLayout.EAST);
 
-        docCard.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                docCard.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(hoverBorderColor, 2),
-                        BorderFactory.createEmptyBorder(0, 0, 0, 0)
-                ));
-                docCard.setBackground(new Color(250, 250, 255));
-                labelPanel.setBackground(new Color(250, 250, 255));
-                setCursor(new Cursor(Cursor.HAND_CURSOR));
-            }
+        docCard.add(bottomPanel, BorderLayout.SOUTH);
 
+        // Popup Menu
+        JPopupMenu popupMenu = new JPopupMenu();
+        
+        ImageIcon personIcon = null;
+        ImageIcon binIcon = null;
+        try {
+            URL personUrl = getClass().getClassLoader().getResource("img/person.png");
+            URL binUrl = getClass().getClassLoader().getResource("img/bin.png");
+            if (personUrl != null) personIcon = new ImageIcon(personUrl);
+            if (binUrl != null) binIcon = new ImageIcon(binUrl);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        JMenuItem manageAccess = new JMenuItem("Manage Access", personIcon);
+        manageAccess.setFont(new Font("SansSerif", Font.BOLD, 12));
+        
+        JMenuItem deleteDoc = new JMenuItem("Delete Document", binIcon);
+        deleteDoc.setForeground(new Color(214, 41, 85));
+        deleteDoc.setFont(new Font("SansSerif", Font.BOLD, 12));
 
-            public void mouseExited(MouseEvent e) {
-                docCard.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(defaultBorderColor),
-                        BorderFactory.createEmptyBorder(1, 1, 1, 1)
-                ));
-                docCard.setBackground(Color.WHITE);
-                labelPanel.setBackground(Color.WHITE);
-                setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        popupMenu.add(manageAccess);
+        popupMenu.addSeparator();
+        popupMenu.add(deleteDoc);
+
+        optionsLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                popupMenu.show(optionsLabel, e.getX(), e.getY());
             }
         });
 
+        // Hover Effect
+        docCard.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                docCard.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(hoverBorderColor, 2),
+                    BorderFactory.createEmptyBorder(9, 9, 9, 9)
+                ));
+                docCard.setBackground(new Color(250, 250, 255));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+            }
+
+            public void mouseExited(MouseEvent e) {
+                docCard.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(defaultBorderColor),
+                    BorderFactory.createEmptyBorder(10, 10, 10, 10)
+                ));
+                docCard.setBackground(Color.WHITE);
+                setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            }
+
+            public void mouseClicked(MouseEvent e) {
+                for (File file : DocumentStorage.uploadedDocuments) {
+                    if (file.getName().equals(titleText)) {
+                        try {
+                            Desktop.getDesktop().open(file);
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(
+                                docCard,
+                                "Failed to open document: " + ex.getMessage(),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE
+                            );
+                            ex.printStackTrace();
+                        }
+                        break;
+                    }
+                }
+            }
+        });
 
         return docCard;
     }
+    
+    
 
     private void populateDocuments() {
         documentsGrid.removeAll();
 
         List<File> uploaded = DocumentStorage.uploadedDocuments;
-
         if (uploaded.isEmpty()) {
             for (int i = 0; i < 4; i++) {
                 documentsGrid.add(createDocumentCard("K3C_DPPLOO0" + (i + 1), "15 May 2025"));

@@ -13,7 +13,8 @@ public class SearchBar extends JPanel {
 
     private ImageIcon createImageIcon(String path) {
         try {
-            String imgPath = System.getProperty("user.dir") + "/img/" + path;
+            String projectRoot = System.getProperty("user.dir");
+            String imgPath = projectRoot + "/img/" + path;
             return new ImageIcon(imgPath);
         } catch (Exception e) {
             System.err.println("Couldn't find file: " + path);

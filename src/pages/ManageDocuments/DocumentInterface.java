@@ -23,7 +23,7 @@ public class DocumentInterface {
         header.setBackground(Color.WHITE);
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(220, 218, 230)));
 
-        ImageIcon backIcon = new ImageIcon("img/icon-back.png");
+        ImageIcon backIcon = new ImageIcon(System.getProperty("user.dir") + "/img/icon-back.png");
         Image scaledBack = backIcon.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
         JLabel backLabel = new JLabel(" File Name", new ImageIcon(scaledBack), JLabel.LEFT);
         backLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
@@ -50,9 +50,9 @@ public class DocumentInterface {
 
         JPanel iconPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 40, 10));
         iconPanel.setOpaque(false);
-        iconPanel.add(createIconWithText("img/icon-sharing.png", "Sharing", textNormal, textHover));
-        iconPanel.add(createIconWithText("img/icon-backup.png", "Backup", textNormal, textHover));
-        iconPanel.add(createIconWithText("img/icon-delete.png", "Delete", textNormal, textHover));
+        iconPanel.add(createIconWithText(System.getProperty("user.dir") + "/img/icon-sharing.png", "Sharing", textNormal, textHover));
+        iconPanel.add(createIconWithText(System.getProperty("user.dir") + "/img/icon-backup.png", "Backup", textNormal, textHover));
+        iconPanel.add(createIconWithText(System.getProperty("user.dir") + "/img/icon-delete.png", "Delete", textNormal, textHover));
         header.add(iconPanel, BorderLayout.EAST);
 
         frame.add(header, BorderLayout.NORTH);
@@ -182,7 +182,7 @@ public class DocumentInterface {
         centerPanel.setBackground(Color.WHITE);
 
         // Delete illustration
-        ImageIcon deleteIcon = new ImageIcon("img/delete-illustration.png");
+        ImageIcon deleteIcon = new ImageIcon(System.getProperty("user.dir") + "/img/delete-illustration.png");
         Image scaledImage = deleteIcon.getImage().getScaledInstance(180, 180, Image.SCALE_SMOOTH);
         JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
         imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);

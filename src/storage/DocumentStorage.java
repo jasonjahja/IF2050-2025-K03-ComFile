@@ -13,7 +13,7 @@ public class DocumentStorage {
     public static List<File> uploadedDocuments = new ArrayList<>();
     
     // Directory untuk menyimpan file yang diupload
-    private static final String UPLOAD_DIR = "src/uploads";
+    private static final String UPLOAD_DIR = "uploads";
     
     // Inisialisasi directory uploads jika belum ada
     static {
@@ -21,6 +21,15 @@ public class DocumentStorage {
             Path uploadPath = Paths.get(UPLOAD_DIR);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectory(uploadPath);
+            }
+            // Load existing documents
+            File[] existingFiles = uploadPath.toFile().listFiles();
+            if (existingFiles != null) {
+                for (File file : existingFiles) {
+                    if (file.isFile()) {
+                        uploadedDocuments.add(file);
+                    }
+                }
             }
         } catch (IOException e) {
             System.err.println("Error creating upload directory: " + e.getMessage());
