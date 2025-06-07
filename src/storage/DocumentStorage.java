@@ -64,8 +64,12 @@ public class DocumentStorage {
     // Method untuk menghapus dokumen
     public static boolean deleteDocument(File file) {
         try {
-            if (file.delete()) {
-                uploadedDocuments.remove(file);
+            // Buat ulang path file berdasarkan nama file untuk memastikan file dari folder uploads
+            Path targetPath = Paths.get(UPLOAD_DIR, file.getName());
+            File targetFile = targetPath.toFile();
+
+            if (targetFile.delete()) {
+                uploadedDocuments.removeIf(f -> f.getName().equals(file.getName())); // hapus dari list berdasarkan nama
                 return true;
             }
             return false;
@@ -74,6 +78,7 @@ public class DocumentStorage {
             return false;
         }
     }
+
 
     // Method untuk mengecek apakah file sudah ada di storage
     public static boolean isDocumentExists(String fileName) {
