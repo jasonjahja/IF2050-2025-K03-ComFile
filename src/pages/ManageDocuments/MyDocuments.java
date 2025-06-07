@@ -200,9 +200,10 @@ public class MyDocuments extends JPanel {
             // Cloud icon
             JLabel iconLabel = new JLabel();
             try {
-                URL imageUrl = getClass().getClassLoader().getResource("img/cloud.png");
-                if (imageUrl != null) {
-                    ImageIcon icon = new ImageIcon(imageUrl);
+                String path = System.getProperty("user.dir") + "/img/cloud.png";
+                File imageFile = new File(path);
+                if (imageFile.exists()) {
+                    ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
                     Image scaled = icon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
                     iconLabel.setIcon(new ImageIcon(scaled));
                 }
@@ -373,9 +374,10 @@ public class MyDocuments extends JPanel {
         // Load thumbnail
         ImageIcon docImage = null;
         try {
-            URL imageUrl = getClass().getClassLoader().getResource("img/doc-thumb.png");
-            if (imageUrl != null) {
-                docImage = new ImageIcon(imageUrl);
+            String path = System.getProperty("user.dir") + "/img/doc-thumb.png";
+            File imageFile = new File(path);
+            if (imageFile.exists()) {
+                docImage = new ImageIcon(imageFile.getAbsolutePath());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -437,10 +439,12 @@ public class MyDocuments extends JPanel {
         ImageIcon personIcon = null;
         ImageIcon binIcon = null;
         try {
-            URL personUrl = getClass().getClassLoader().getResource("img/person.png");
-            URL binUrl = getClass().getClassLoader().getResource("img/bin.png");
-            if (personUrl != null) personIcon = new ImageIcon(personUrl);
-            if (binUrl != null) binIcon = new ImageIcon(binUrl);
+            String personPath = System.getProperty("user.dir") + "/img/person.png";
+            String binPath = System.getProperty("user.dir") + "/img/bin.png";
+            File personFile = new File(personPath);
+            File binFile = new File(binPath);
+            if (personFile.exists()) personIcon = new ImageIcon(personFile.getAbsolutePath());
+            if (binFile.exists()) binIcon = new ImageIcon(binFile.getAbsolutePath());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -461,6 +465,18 @@ public class MyDocuments extends JPanel {
             public void mousePressed(MouseEvent e) {
                 popupMenu.show(optionsLabel, e.getX(), e.getY());
             }
+        });
+
+        deleteDoc.addActionListener(event -> {
+            Window parentWindow = SwingUtilities.getWindowAncestor(documentsGrid);
+            File fileToDelete = new File("uploads/" + titleText); // pastikan file path sesuai dengan storage
+            showDeleteConfirmation(parentWindow, titleText, () -> {
+                // Remove file from storage
+                DocumentStorage.deleteDocument(fileToDelete);
+                
+                // Refresh the UI
+                refreshDocuments();
+            });
         });
 
         // Hover Effect
@@ -505,8 +521,6 @@ public class MyDocuments extends JPanel {
 
         return docCard;
     }
-    
-    
 
     private void populateDocuments() {
         documentsGrid.removeAll();
@@ -531,5 +545,153 @@ public class MyDocuments extends JPanel {
 
     public void refreshDocuments() {
         populateDocuments();
+    }
+
+    private void showDeleteConfirmation(Window parent, String fileName, Runnable onDelete) {
+        // Custom colors
+        Color dangerColor = new Color(214, 41, 85);  // Bright pink/red color
+        Color textColor = new Color(67, 63, 78);     // Dark gray for text
+        
+        // Create glass pane for dark overlay
+        JPanel glassPane = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                g.setColor(new Color(0, 0, 0, 150)); // Semi-transparent black
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        glassPane.setOpaque(false);
+        ((JFrame) parent).setGlassPane(glassPane);
+        glassPane.setVisible(true);
+        
+        // Create custom dialog
+        JDialog dialog = new JDialog((JFrame)parent, "", true);
+        dialog.setUndecorated(true); // Remove window decorations
+        dialog.setBackground(Color.WHITE);
+        
+        // Main panel with rounded corners
+        JPanel mainPanel = new JPanel(new BorderLayout(0, 20)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 32, 32);
+                g2.dispose();
+            }
+        };
+        mainPanel.setBackground(Color.WHITE);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
+        // Center content panel
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.setBackground(Color.WHITE);
+
+        // Delete illustration
+        ImageIcon deleteIcon = new ImageIcon("img/delete-illustration.png");
+        Image scaledImage = deleteIcon.getImage().getScaledInstance(180, 180, Image.SCALE_SMOOTH);
+        JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
+        imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // Text content
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setBackground(Color.WHITE);
+        
+        JLabel warningLabel = new JLabel("<html><div style='text-align: center;'>This action cannot be <span style='color: rgb(214, 41, 85);'>undone</span>. Deleting this item<br/>will <span style='color: rgb(214, 41, 85);'>permanently remove</span> it from your account.</div></html>");
+        warningLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        warningLabel.setForeground(textColor);
+        warningLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JLabel confirmLabel = new JLabel("Are you sure you want to proceed?");
+        confirmLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        confirmLabel.setForeground(textColor);
+        confirmLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // Add components with proper spacing
+        centerPanel.add(Box.createVerticalStrut(20));
+        centerPanel.add(imageLabel);
+        centerPanel.add(Box.createVerticalStrut(30));
+        centerPanel.add(warningLabel);
+        centerPanel.add(Box.createVerticalStrut(10));
+        centerPanel.add(confirmLabel);
+        centerPanel.add(Box.createVerticalStrut(30));
+        
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
+
+        // Button panel
+        JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 0, 10));
+        buttonPanel.setBackground(Color.WHITE);
+
+        // Delete button
+        JButton deleteButton = new JButton("Delete Document") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        deleteButton.setBackground(dangerColor);
+        deleteButton.setForeground(Color.WHITE);
+        deleteButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        deleteButton.setBorder(BorderFactory.createEmptyBorder(12, 0, 12, 0));
+        deleteButton.setFocusPainted(false);
+        deleteButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        deleteButton.setContentAreaFilled(false);
+        
+        // Cancel button
+        JButton cancelButton = new JButton("Cancel") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.setColor(dangerColor);
+                g2.setStroke(new BasicStroke(1));
+                g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 16, 16);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        cancelButton.setForeground(dangerColor);
+        cancelButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        cancelButton.setBorder(BorderFactory.createEmptyBorder(12, 0, 12, 0));
+        cancelButton.setFocusPainted(false);
+        cancelButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        cancelButton.setContentAreaFilled(false);
+
+        // Add button actions
+        deleteButton.addActionListener(e -> {
+            System.out.println("Document deleted: " + fileName);
+            onDelete.run();
+            glassPane.setVisible(false);
+            dialog.dispose();
+        });
+
+        cancelButton.addActionListener(e -> {
+            glassPane.setVisible(false);
+            dialog.dispose();
+        });
+        
+        buttonPanel.add(deleteButton);
+        buttonPanel.add(cancelButton);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Add shadow border to the main panel
+        mainPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(10, 10, 10, 10),
+            mainPanel.getBorder()
+        ));
+
+        dialog.add(mainPanel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
     }
 }
