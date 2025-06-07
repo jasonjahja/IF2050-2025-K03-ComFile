@@ -5,11 +5,13 @@ import javax.swing.border.AbstractBorder;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.net.URL;
 
 public class SearchBar extends JPanel {
     private final String PLACEHOLDER = "Search document";
     private JTextField searchField;
+    public JTextField getSearchField() {
+        return searchField;
+    }
 
     private ImageIcon createImageIcon(String path) {
         try {
@@ -26,17 +28,34 @@ public class SearchBar extends JPanel {
         setLayout(new BorderLayout());
         setOpaque(true);
         setBackground(Color.WHITE);
-        setBorder(new RoundedBorder(30, new Color(230, 230, 240))); // Light purple border
+        setBorder(new RoundedBorder(30, new Color(230, 230, 240)));
 
-        // Text field with placeholder
-        searchField = new JTextField();
+        // Panel horizontal dengan BoxLayout agar bisa align vertikal
+        JPanel innerPanel = new JPanel();
+        innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.X_AXIS));
+        innerPanel.setOpaque(false);
+        innerPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+
+        // Search icon
+        ImageIcon searchIcon = createImageIcon("icon-search.png");
+        if (searchIcon != null) {
+            Image scaledSearch = searchIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+            JLabel searchLabel = new JLabel(new ImageIcon(scaledSearch));
+            searchLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+            innerPanel.add(searchLabel);
+            innerPanel.add(Box.createRigidArea(new Dimension(10, 0))); // spacing
+        }
+
+        // Text field
+        searchField = new JTextField(25);
+        searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        searchField.setAlignmentY(Component.CENTER_ALIGNMENT);
         searchField.setBorder(null);
         searchField.setBackground(Color.WHITE);
-        searchField.setForeground(new Color(130, 130, 140)); // Light gray
+        searchField.setForeground(new Color(130, 130, 140));
         searchField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         searchField.setText(PLACEHOLDER);
 
-        // Add placeholder behavior
         searchField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -55,23 +74,15 @@ public class SearchBar extends JPanel {
             }
         });
 
-        // Search icon
-        ImageIcon searchIcon = createImageIcon("icon-search.png");
-        if (searchIcon != null) {
-            Image scaledSearch = searchIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-            JLabel searchLabel = new JLabel(new ImageIcon(scaledSearch));
-            searchLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
-            add(searchLabel, BorderLayout.WEST);
-        }
-
-        // Tambahkan ke panel
-        JPanel leftPadding = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
-        leftPadding.setBackground(Color.WHITE);
-        
-        add(leftPadding, BorderLayout.WEST);
-        add(searchField, BorderLayout.CENTER);
+        innerPanel.add(searchField);
+        add(innerPanel, BorderLayout.CENTER);
 
         setPreferredSize(new Dimension(500, 40));
+    }
+
+    public String getSearchText() {
+        String text = searchField.getText();
+        return text.equals(PLACEHOLDER) ? "" : text;
     }
 
     // Border bulat custom
@@ -88,12 +99,6 @@ public class SearchBar extends JPanel {
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
             Graphics2D g2d = (Graphics2D) g;
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            
-            // Draw background first
-            g2d.setColor(c.getBackground());
-            g2d.fillRoundRect(x, y, width - 1, height - 1, radius, radius);
-            
-            // Then draw border
             g2d.setColor(borderColor);
             g2d.setStroke(new BasicStroke(1));
             g2d.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
@@ -101,16 +106,16 @@ public class SearchBar extends JPanel {
 
         @Override
         public Insets getBorderInsets(Component c) {
-            return new Insets(4, 4, 4, 4);
+            return new Insets(8, 8, 8, 8);
         }
     }
 
-    // Untuk testing
+    // Untuk testing mandiri
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Search Bar");
+        JFrame frame = new JFrame("Search Bar Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().setLayout(new FlowLayout());
-        frame.getContentPane().add(new SearchBar());
+        frame.setLayout(new FlowLayout());
+        frame.add(new SearchBar());
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
