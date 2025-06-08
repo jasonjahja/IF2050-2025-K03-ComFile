@@ -8,6 +8,19 @@ public class Filter extends JPanel {
     private JCheckBox pdfCheckBox, imageCheckBox, docxCheckBox, xlsxCheckBox;
     private JComboBox<String> lastModifiedComboBox;
     private JButton resetButton, applyButton;
+    public boolean isPdfSelected() { return pdfCheckBox.isSelected(); }
+    public boolean isImageSelected() { return imageCheckBox.isSelected(); }
+    public boolean isDocxSelected() { return docxCheckBox.isSelected(); }
+    public boolean isXlsxSelected() { return xlsxCheckBox.isSelected(); }
+    private Runnable onResetAction;
+
+    public void setOnResetAction(Runnable r) {
+        this.onResetAction = r;
+    }
+
+    public String getLastModifiedFilter() {
+        return (String) lastModifiedComboBox.getSelectedItem();
+    }
 
     public Filter() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -60,13 +73,19 @@ public class Filter extends JPanel {
         String[] dateOptions = {"Today", "This Week", "This Month", "This Year"};
         lastModifiedComboBox = new JComboBox<>(dateOptions);
         lastModifiedComboBox.setPreferredSize(new Dimension(200, 30));
+        lastModifiedComboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
         lastModifiedComboBox.setBackground(Color.WHITE);
-        lastModifiedComboBox.setFont(new Font("Arial", Font.PLAIN, 14));
+        lastModifiedComboBox.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+            BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        ));
+        lastModifiedComboBox.setFocusable(false);
+
         
         comboBoxPanel.add(lastModifiedComboBox);
         add(comboBoxPanel);
 
-        add(Box.createVerticalStrut(84));
+        add(Box.createVerticalStrut(104));
 
         // Button panel with proper alignment
         JPanel buttonPanel = new JPanel();
@@ -90,14 +109,63 @@ public class Filter extends JPanel {
     }
 
     private JCheckBox createStyledCheckBox(String text) {
-        JCheckBox checkBox = new JCheckBox(text);
-        checkBox.setFont(new Font("Arial", Font.PLAIN, 14));
-        checkBox.setBackground(Color.WHITE);
-        checkBox.setBorder(null);
-        checkBox.setMargin(new Insets(0, 0, 0, 0));
-        checkBox.setIconTextGap(4);
+        JCheckBox checkBox = new JCheckBox(text) {
+            @Override
+            public void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                setOpaque(false);
+                setBackground(Color.WHITE);
+            }
+        };
+        checkBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        checkBox.setFocusPainted(false);
+        checkBox.setContentAreaFilled(false);
+        checkBox.setBorderPainted(false);
+        checkBox.setIcon(new CustomCheckBoxIcon());
+        checkBox.setIconTextGap(8); 
+        checkBox.setHorizontalAlignment(SwingConstants.LEFT); 
+        checkBox.setHorizontalTextPosition(SwingConstants.RIGHT); 
+        checkBox.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0)); 
         return checkBox;
     }
+
+
+    class CustomCheckBoxIcon implements Icon {
+    private final int size = 16;
+
+    @Override
+    public void paintIcon(Component c, Graphics g, int x, int y) {
+        JCheckBox cb = (JCheckBox) c;
+        Graphics2D g2 = (Graphics2D) g.create();
+
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Border
+        g2.setColor(new Color(230, 230, 230));
+        g2.fillRoundRect(x, y, size, size, 6, 6);
+
+        // Checkmark
+        if (cb.isSelected()) {
+            g2.setColor(new Color(100, 80, 200));
+            g2.setStroke(new BasicStroke(2f));
+            g2.drawLine(x + 4, y + 8, x + 7, y + 11);
+            g2.drawLine(x + 7, y + 11, x + 12, y + 4);
+        }
+
+        g2.dispose();
+    }
+
+    @Override
+    public int getIconWidth() {
+        return size;
+    }
+
+    @Override
+    public int getIconHeight() {
+        return size;
+    }
+}
+
 
     private JButton createStyledButton(String text, boolean isPrimary) {
         JButton button = new JButton(text);
@@ -129,6 +197,10 @@ public class Filter extends JPanel {
         docxCheckBox.setSelected(false);
         xlsxCheckBox.setSelected(false);
         lastModifiedComboBox.setSelectedIndex(0);
+        
+        if (onResetAction != null) {
+            onResetAction.run();
+        }
     }
 
     private void applyFilters() {
@@ -139,5 +211,9 @@ public class Filter extends JPanel {
         if (docxCheckBox.isSelected()) System.out.println("- Docx");
         if (xlsxCheckBox.isSelected()) System.out.println("- XLSX");
         System.out.println("Last Modified: " + lastModifiedComboBox.getSelectedItem());
+    }
+
+    public void setApplyAction(Runnable action) {
+        applyButton.addActionListener(e -> action.run());
     }
 } 

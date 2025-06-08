@@ -6,12 +6,13 @@ import storage.DocumentStorage;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentListener;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.net.URL;
 
 public class MyDocuments extends JPanel {
     private JPanel documentsGrid;
@@ -20,6 +21,7 @@ public class MyDocuments extends JPanel {
     private Color hoverBorderColor = new Color(90, 106, 207);
     private static final int FILTER_WIDTH = 250;
     private SearchBar searchBar;
+    private Filter filterComponent;
 
     public MyDocuments() {
         initializeComponents();
@@ -46,11 +48,17 @@ public class MyDocuments extends JPanel {
         mainContainer.setBackground(new Color(248, 249, 250));
 
         // === Filter Panel ===
-        Filter filterComponent = new Filter();
+        filterComponent = new Filter();
         filterComponent.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(230, 230, 230), 1, true),
                 BorderFactory.createEmptyBorder(16, 20, 16, 20)
         ));
+
+        // filterComponent.setApplyAction(this::filterDocuments);
+        // filterComponent.setOnResetAction(this::refreshDocuments);
+
+        filterComponent.setApplyAction(this::filterAndSearch);
+        filterComponent.setOnResetAction(this::filterAndSearch);
 
         // === Documents Scroll Area ===
         JPanel documentsContainer = new JPanel(new BorderLayout());
@@ -347,24 +355,10 @@ public class MyDocuments extends JPanel {
         add(topContainer, BorderLayout.NORTH);
         add(mainContainer, BorderLayout.CENTER);
 
-        searchBar.getSearchField().getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) {
-                updateSearch();
-            }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) {
-                updateSearch();
-            }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) {
-                updateSearch();
-            }
-
-            private void updateSearch() {
-                String keyword = searchBar.getSearchText().toLowerCase();
-                List<File> filtered = DocumentStorage.uploadedDocuments.stream()
-                    .filter(file -> file.getName().toLowerCase().contains(keyword))
-                    .toList();
-                populateDocuments(filtered);
-            }
+        searchBar.getSearchField().getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { filterAndSearch(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { filterAndSearch(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { filterAndSearch(); }
         });
     }
 
@@ -745,4 +739,32 @@ public class MyDocuments extends JPanel {
         dialog.setLocationRelativeTo(parent);
         dialog.setVisible(true);
     }
+
+    private void filterAndSearch() {
+        String keyword = searchBar.getSearchText().toLowerCase();
+
+        List<File> filtered = DocumentStorage.uploadedDocuments.stream()
+            .filter(file -> {
+                boolean matchesSearch = file.getName().toLowerCase().contains(keyword);
+
+                // File type filtering
+                String name = file.getName().toLowerCase();
+                boolean matchesType = true;
+                boolean anySelected = filterComponent.isPdfSelected() || filterComponent.isImageSelected()
+                        || filterComponent.isDocxSelected() || filterComponent.isXlsxSelected();
+
+                if (anySelected) {
+                    matchesType = (filterComponent.isPdfSelected() && name.endsWith(".pdf")) ||
+                                (filterComponent.isImageSelected() && (name.endsWith(".jpg") || name.endsWith(".png"))) ||
+                                (filterComponent.isDocxSelected() && name.endsWith(".docx")) ||
+                                (filterComponent.isXlsxSelected() && name.endsWith(".xlsx"));
+                }
+
+                return matchesSearch && matchesType;
+            })
+            .toList();
+
+        populateDocuments(filtered);
+    }
+
 }
