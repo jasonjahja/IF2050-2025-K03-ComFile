@@ -15,9 +15,11 @@ import java.net.URL;
 
 public class MyDocuments extends JPanel {
     private JPanel documentsGrid;
+    private JPanel documentsWrapper;
     private Color defaultBorderColor = new Color(200, 200, 200);
     private Color hoverBorderColor = new Color(90, 106, 207);
     private static final int FILTER_WIDTH = 250;
+    private SearchBar searchBar;
 
     public MyDocuments() {
         initializeComponents();
@@ -33,6 +35,10 @@ public class MyDocuments extends JPanel {
         documentsGrid = new JPanel(new GridLayout(0, 4, 20, 20));
         documentsGrid.setBackground(new Color(248, 249, 250));
         documentsGrid.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        documentsWrapper = new JPanel(new BorderLayout());
+        documentsWrapper.setPreferredSize(new Dimension(800, 400));
+        documentsWrapper.add(documentsGrid, BorderLayout.NORTH);
     }
 
     private void setupLayout() {
@@ -50,7 +56,8 @@ public class MyDocuments extends JPanel {
         JPanel documentsContainer = new JPanel(new BorderLayout());
         documentsContainer.setBackground(new Color(248, 249, 250));
 
-        JScrollPane documentsScrollPane = new JScrollPane(documentsGrid);
+        JScrollPane documentsScrollPane = new JScrollPane(documentsWrapper);
+        documentsGrid.setOpaque(false);
         documentsScrollPane.setBorder(null);
         documentsScrollPane.getVerticalScrollBar().setUnitIncrement(16);
         documentsScrollPane.setBackground(new Color(248, 249, 250));
@@ -329,7 +336,8 @@ public class MyDocuments extends JPanel {
 
         JPanel searchBarWrapper = new JPanel(new BorderLayout());
         searchBarWrapper.setBackground(new Color(248, 249, 250));
-        searchBarWrapper.add(new SearchBar(), BorderLayout.CENTER);
+        searchBar = new SearchBar();
+        searchBarWrapper.add(searchBar, BorderLayout.CENTER);
 
         topContainer.add(headerPanel);
         topContainer.add(Box.createVerticalStrut(20)); // spacing
@@ -338,6 +346,26 @@ public class MyDocuments extends JPanel {
 
         add(topContainer, BorderLayout.NORTH);
         add(mainContainer, BorderLayout.CENTER);
+
+        searchBar.getSearchField().getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                updateSearch();
+            }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                updateSearch();
+            }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                updateSearch();
+            }
+
+            private void updateSearch() {
+                String keyword = searchBar.getSearchText().toLowerCase();
+                List<File> filtered = DocumentStorage.uploadedDocuments.stream()
+                    .filter(file -> file.getName().toLowerCase().contains(keyword))
+                    .toList();
+                populateDocuments(filtered);
+            }
+        });
     }
 
     private void loadDocumentsFromStorage() {
@@ -546,6 +574,29 @@ public class MyDocuments extends JPanel {
     public void refreshDocuments() {
         populateDocuments();
     }
+
+    private void populateDocuments(List<File> filesToShow) {
+        documentsGrid.removeAll();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+
+        if (filesToShow.isEmpty()) {
+            JLabel emptyMsg = new JLabel("No documents found.");
+            emptyMsg.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            emptyMsg.setHorizontalAlignment(SwingConstants.CENTER);
+            documentsGrid.add(emptyMsg);
+        } else {
+            for (File file : filesToShow) {
+                String name = file.getName();
+                String date = dateFormat.format(file.lastModified());
+                documentsGrid.add(createDocumentCard(name, date));
+            }
+        }
+
+        documentsGrid.revalidate();
+        documentsGrid.repaint();
+    }
+
 
     private void showDeleteConfirmation(Window parent, String fileName, Runnable onDelete) {
         // Custom colors
