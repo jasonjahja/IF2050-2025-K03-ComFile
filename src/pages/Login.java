@@ -1,5 +1,6 @@
 package pages;
 
+import main.MainApplication;
 import pages.Dashboard.Dashboard;
 import pages.AdminDashboard;
 import javax.swing.*;
@@ -156,14 +157,13 @@ public class Login extends JFrame {
                 // Tutup window login
                 this.dispose();
 
-                // Redirect ke dashboard sesuai role
-                SwingUtilities.invokeLater(() -> {
-                    if (userRole.equals("Admin")) {
-                        new AdminDashboard(username, userRole);
-                    } else {
-                        new Dashboard(username, userRole);
-                    }
-                });
+                // Kalau Admin, ke AdminDashboard. Kalau lainnya, ke Dashboard
+                if (userRole.equals("Admin")) {
+                    new AdminDashboard(username, userRole);
+                } else {
+                    new Dashboard(username, userRole);
+                }
+
             } else {
                 JOptionPane.showMessageDialog(this, "Username/password salah!");
             }
@@ -226,7 +226,9 @@ public class Login extends JFrame {
         }
     }
 
+    /*
     public static void main(String[] args) {
         SwingUtilities.invokeLater(Login::new);
     }
+    */
 }
