@@ -76,7 +76,7 @@ public class SearchBar extends JPanel {
         // Tambahkan ke panel
         JPanel leftPadding = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         leftPadding.setBackground(Color.WHITE);
-        
+
         add(leftPadding, BorderLayout.WEST);
         add(searchField, BorderLayout.CENTER);
 
@@ -97,11 +97,11 @@ public class SearchBar extends JPanel {
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
             Graphics2D g2d = (Graphics2D) g;
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            
+
             // Draw background first
             g2d.setColor(c.getBackground());
             g2d.fillRoundRect(x, y, width - 1, height - 1, radius, radius);
-            
+
             // Then draw border
             g2d.setColor(borderColor);
             g2d.setStroke(new BasicStroke(1));
