@@ -1,5 +1,9 @@
+package main;
+
 import components.NavigationBar;
+// import java.awt.event.ComponentEvent;
 import pages.ManageDocuments.MyDocuments;
+import pages.Login;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,15 +14,18 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
     private CardLayout cardLayout;
     private MyDocuments documentsPage;
 
-    public MainApplication() {
+    private static MainApplication instance;
+
+    public MainApplication(String username, String role) {
+        instance = this;
         initializeApplication();
-        createPages();
+        createPages(username, role);
         setupLayout();
         setVisible(true);
     }
 
     private void initializeApplication() {
-        setTitle("Document Management System");
+        setTitle("ComFile - Document Management System");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1400, 900);
         setLocationRelativeTo(null);
@@ -31,17 +38,18 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
         navigationBar = new NavigationBar();
         navigationBar.setNavigationListener(this);
-        navigationBar.setUserInfo("User", "Employee");
 
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
     }
 
-    private void createPages() {
-        // ⬇️ simpan ke variabel global agar bisa dipanggil nanti
-        documentsPage = new MyDocuments();
+    private void createPages(String username, String role) {
+        // Set user info di navigation bar
+        navigationBar.setUserInfo(username, role);
 
+        // Tambahkan halaman-halaman
         JPanel homePage = createPlaceholderPage("Home Page", "Welcome to the Document Management System");
+        JPanel documentsPage = new MyDocuments(); // Atau new MyDocuments(username, role) kalau kamu pakai parameter
         JPanel backupPage = createPlaceholderPage("Backup Page", "Backup and restore your documents");
 
         contentPanel.add(homePage, "HOME");
@@ -91,11 +99,11 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         add(contentPanel, BorderLayout.CENTER);
     }
 
-    // NavigationListener implementation
+    // ========== Navigation Listener ==========
+
     @Override
     public void onHomeClicked() {
         cardLayout.show(contentPanel, "HOME");
-        System.out.println("Navigated to Home");
     }
 
     @Override
@@ -104,13 +112,11 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
             documentsPage.refreshDocuments();
         }
         cardLayout.show(contentPanel, "DOCUMENTS");
-        System.out.println("Navigated to Documents");
     }
 
     @Override
     public void onBackupClicked() {
         cardLayout.show(contentPanel, "BACKUP");
-        System.out.println("Navigated to Backup");
     }
 
     @Override
@@ -129,13 +135,18 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
                 JOptionPane.YES_NO_OPTION);
 
         if (result == JOptionPane.YES_OPTION) {
-            System.exit(0);
+            dispose(); // Tutup window utama
+            new Login(); // Tampilkan login lagi
         }
     }
 
+    // ========== Untuk dipanggil setelah login ==========
+    public static void startWithUser(String username, String role) {
+        SwingUtilities.invokeLater(() -> new MainApplication(username, role));
+    }
+
+    // ========== Main Awal: Login page ==========
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new MainApplication();
-        });
+        SwingUtilities.invokeLater(() -> new Login());
     }
 }
