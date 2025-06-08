@@ -447,12 +447,13 @@ public class MyDocuments extends JPanel {
         bottomPanel.setBackground(Color.WHITE);
         bottomPanel.add(infoPanel, BorderLayout.CENTER);
 
-        // Options Button
-        JLabel optionsLabel = new JLabel("⋮");
-        optionsLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        //Options Button
+        ImageIcon icon = new ImageIcon("img/icon-dots.png");
+        Image scaled = icon.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+        JLabel optionsLabel = new JLabel(new ImageIcon(scaled));
         optionsLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        bottomPanel.add(optionsLabel, BorderLayout.EAST);
 
+        bottomPanel.add(optionsLabel, BorderLayout.EAST);
         docCard.add(bottomPanel, BorderLayout.SOUTH);
 
         // Popup Menu
