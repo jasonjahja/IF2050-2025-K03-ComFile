@@ -2,13 +2,13 @@ import components.NavigationBar;
 import pages.ManageDocuments.MyDocuments;
 
 import javax.swing.*;
-
 import java.awt.*;
 
 public class MainApplication extends JFrame implements NavigationBar.NavigationListener {
     private NavigationBar navigationBar;
     private JPanel contentPanel;
     private CardLayout cardLayout;
+    private MyDocuments documentsPage;
 
     public MainApplication() {
         initializeApplication();
@@ -23,38 +23,31 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         setSize(1400, 900);
         setLocationRelativeTo(null);
 
-        // Set system look and feel
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Initialize navigation bar
         navigationBar = new NavigationBar();
         navigationBar.setNavigationListener(this);
         navigationBar.setUserInfo("User", "Employee");
 
-        // Initialize content panel with CardLayout
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
     }
 
     private void createPages() {
-        // Create Documents page
-        // Pages
-        MyDocuments documentsPage = new MyDocuments();
+        // ⬇️ simpan ke variabel global agar bisa dipanggil nanti
+        documentsPage = new MyDocuments();
 
-        // Create placeholder pages
         JPanel homePage = createPlaceholderPage("Home Page", "Welcome to the Document Management System");
         JPanel backupPage = createPlaceholderPage("Backup Page", "Backup and restore your documents");
 
-        // Add pages to content panel
         contentPanel.add(homePage, "HOME");
         contentPanel.add(documentsPage, "DOCUMENTS");
         contentPanel.add(backupPage, "BACKUP");
 
-        // Show home page by default
         cardLayout.show(contentPanel, "HOME");
     }
 
@@ -107,6 +100,9 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
     @Override
     public void onDocumentsClicked() {
+        if (documentsPage != null) {
+            documentsPage.refreshDocuments();
+        }
         cardLayout.show(contentPanel, "DOCUMENTS");
         System.out.println("Navigated to Documents");
     }

@@ -8,6 +8,15 @@ import java.awt.event.FocusEvent;
 import java.net.URL;
 
 public class SearchBar extends JPanel {
+
+    public JTextField getSearchField() {
+        return searchField;
+    }
+
+    public String getSearchText() {
+        return searchField.getText().equals(PLACEHOLDER) ? "" : searchField.getText();
+    }
+
     private final String PLACEHOLDER = "Search document";
     private JTextField searchField;
 
