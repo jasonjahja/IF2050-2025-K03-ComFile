@@ -3,17 +3,17 @@ package pages;
 import main.MainApplication;
 import pages.Dashboard.Dashboard;
 import pages.AdminDashboard;
+import utils.DBConnection;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.border.*;
-import java.util.HashMap;
+import java.sql.*;
 
 public class Login extends JFrame {
     private final PlaceholderTextField usernameField;
     private final PlaceholderPasswordField passwordField;
-    private final HashMap<String, String> userPasswords = new HashMap<>();
-    private final HashMap<String, String> role = new HashMap<>();
 
     public Login() {
         setTitle("ComFile Login");
@@ -22,7 +22,7 @@ public class Login extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new GridLayout(1, 2));
 
-        // === LEFT: Illustration (dynamic resize) ===
+        // === LEFT: Illustration ===
         JLabel imageLabel = new JLabel();
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.CENTER);
@@ -42,7 +42,7 @@ public class Login extends JFrame {
             }
         });
 
-        // === RIGHT: Form Panel with Centering ===
+        // === RIGHT: Form Panel ===
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(Color.WHITE);
         add(formPanel);
@@ -56,21 +56,18 @@ public class Login extends JFrame {
         contentWrapper.setPreferredSize(new Dimension(520, 600));
         contentWrapper.setBackground(Color.WHITE);
 
-        // Logo CF (kiri atas)
         ImageIcon logoIcon = new ImageIcon("img/logo.png");
         Image logoImg = logoIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
         JLabel logo = new JLabel(new ImageIcon(logoImg));
         logo.setBounds(60, 10, 40, 40);
         contentWrapper.add(logo);
 
-        // Welcome Back (centered horizontally)
         JLabel welcome = new JLabel("Welcome Back!");
         welcome.setFont(new Font("SansSerif", Font.BOLD, 24));
         welcome.setBounds(60, 130, 400, 40);
         welcome.setHorizontalAlignment(SwingConstants.CENTER);
         contentWrapper.add(welcome);
 
-        // Username Label + Field
         JLabel usernameLabel = new JLabel("Username");
         usernameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         usernameLabel.setBounds(60, 220, 400, 20);
@@ -81,89 +78,69 @@ public class Login extends JFrame {
         usernameField.setBounds(60, 245, 400, 44);
         contentWrapper.add(usernameField);
 
-                // Password Label
         JLabel passwordLabel = new JLabel("Password");
         passwordLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         passwordLabel.setBounds(60, 330, 400, 20);
         contentWrapper.add(passwordLabel);
 
-        // Password Wrapper with BorderLayout
         JPanel passwordWrapper = new JPanel(new BorderLayout());
         passwordWrapper.setBounds(60, 355, 400, 44);
         passwordWrapper.setBackground(Color.WHITE);
         passwordWrapper.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
 
-        // Password Field
         passwordField = new PlaceholderPasswordField("Enter your password");
         passwordField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        passwordField.setBorder(new EmptyBorder(10, 10, 10, 10));  // Standard padding
+        passwordField.setBorder(new EmptyBorder(10, 10, 10, 10));
         passwordWrapper.add(passwordField, BorderLayout.CENTER);
 
-        // Eye Icon
-        ImageIcon rawEye = new ImageIcon("img/eye.png");
-        ImageIcon rawEyeSlash = new ImageIcon("img/eye-slash.png");
-
-        Image scaledEye = rawEye.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
-        Image scaledEyeSlash = rawEyeSlash.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
-
-        ImageIcon eyeIcon = new ImageIcon(scaledEye);
-        ImageIcon eyeSlashIcon = new ImageIcon(scaledEyeSlash);
+        ImageIcon eyeIcon = new ImageIcon(new ImageIcon("img/eye.png").getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH));
+        ImageIcon eyeSlashIcon = new ImageIcon(new ImageIcon("img/eye-slash.png").getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH));
 
         JLabel eyeToggle = new JLabel(eyeIcon);
         eyeToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         eyeToggle.setHorizontalAlignment(SwingConstants.CENTER);
-        eyeToggle.setVerticalAlignment(SwingConstants.CENTER);
-        eyeToggle.setPreferredSize(new Dimension(40, 44)); // Sempit, agar tidak potong border
+        eyeToggle.setPreferredSize(new Dimension(40, 44));
         passwordWrapper.add(eyeToggle, BorderLayout.EAST);
-
         contentWrapper.add(passwordWrapper);
 
-        // Toggle Action
         eyeToggle.addMouseListener(new MouseAdapter() {
             private boolean isVisible = false;
-
             @Override
             public void mouseClicked(MouseEvent e) {
                 isVisible = !isVisible;
-                passwordField.setEchoChar(isVisible ? (char) 0 : '\u2022'); // Bullet char
+                passwordField.setEchoChar(isVisible ? (char) 0 : '\u2022');
                 eyeToggle.setIcon(isVisible ? eyeSlashIcon : eyeIcon);
             }
         });
 
-        // Login Button
         JButton loginButton = new JButton("Login");
         loginButton.setBounds(60, 445, 400, 44);
         loginButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         loginButton.setBackground(Color.decode("#5A6ACF"));
         loginButton.setForeground(Color.WHITE);
         loginButton.setFocusPainted(false);
+
         loginButton.setOpaque(true);
         loginButton.setBorderPainted(false);
+        
         contentWrapper.add(loginButton);
 
         gbc.gridy = 0;
         formPanel.add(contentWrapper, gbc);
 
-        prepareUsers();
-
         loginButton.addActionListener(e -> {
             String username = usernameField.getText().trim();
             String password = new String(passwordField.getPassword()).trim();
 
-            if (userPasswords.containsKey(username) && userPasswords.get(username).equals(password)) {
-                String userRole = role.get(username);
-                JOptionPane.showMessageDialog(this, "Login berhasil sebagai " + userRole);
-
-                // Tutup window login
+            String role = getUserRoleFromDatabase(username, password);
+            if (role != null) {
+                JOptionPane.showMessageDialog(this, "Login berhasil sebagai " + role);
                 this.dispose();
-
-                // Kalau Admin, ke AdminDashboard. Kalau lainnya, ke Dashboard
-                if (userRole.equals("Admin")) {
-                    new AdminDashboard(username, userRole);
+                if (role.equalsIgnoreCase("Admin")) {
+                    new AdminDashboard(username, role);
                 } else {
-                    new Dashboard(username, userRole);
+                    new Dashboard(username, role);
                 }
-
             } else {
                 JOptionPane.showMessageDialog(this, "Username/password salah!");
             }
@@ -172,21 +149,23 @@ public class Login extends JFrame {
         setVisible(true);
     }
 
-    private void prepareUsers() {
-        userPasswords.put("admincf", "admin123"); role.put("admincf", "Admin");
-        userPasswords.put("lanasteiner", "lana123"); role.put("lanasteiner", "Manajer");
-        userPasswords.put("candicewu", "candice123"); role.put("candicewu", "Manajer");
-        userPasswords.put("michaelscott", "michael123"); role.put("michaelscott", "Manajer");
-        userPasswords.put("andreawatson", "andrea123"); role.put("andreawatson", "Manajer");
-        userPasswords.put("jonathanchoi", "jonathan123"); role.put("jonathanchoi", "Manajer");
-        userPasswords.put("oliviarhye", "olivia123"); role.put("oliviarhye", "Karyawan");
-        userPasswords.put("phoenixbaker", "phoenix123"); role.put("phoenixbaker", "Karyawan");
-        userPasswords.put("drewcano", "drew123"); role.put("drewcano", "Karyawan");
-        userPasswords.put("saraperez", "sara123"); role.put("saraperez", "Karyawan");
-        userPasswords.put("kevindarma", "kevin123"); role.put("kevindarma", "Karyawan");
+    private String getUserRoleFromDatabase(String username, String password) {
+        try (Connection conn = DBConnection.connect()) {
+            if (conn == null) return null;
+            String query = "SELECT role FROM users WHERE username = ? AND password = ?";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("role");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
-    // ============ Placeholder TextField ============
     private static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         public PlaceholderTextField(String placeholder) {
@@ -195,7 +174,7 @@ public class Login extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (getText().isEmpty() && !(FocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == this)) {
+            if (getText().isEmpty() && !isFocusOwner()) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setColor(Color.GRAY);
                 g2.setFont(getFont().deriveFont(Font.PLAIN));
@@ -206,7 +185,6 @@ public class Login extends JFrame {
         }
     }
 
-    // ============ Placeholder PasswordField ============
     private static class PlaceholderPasswordField extends JPasswordField {
         private final String placeholder;
         public PlaceholderPasswordField(String placeholder) {
@@ -215,7 +193,7 @@ public class Login extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (getPassword().length == 0 && !(FocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == this)) {
+            if (getPassword().length == 0 && !isFocusOwner()) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setColor(Color.GRAY);
                 g2.setFont(getFont().deriveFont(Font.PLAIN));
@@ -225,10 +203,4 @@ public class Login extends JFrame {
             }
         }
     }
-
-    /*
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(Login::new);
-    }
-    */
 }

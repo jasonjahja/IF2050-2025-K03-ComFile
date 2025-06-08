@@ -43,18 +43,11 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         contentPanel = new JPanel(cardLayout);
     }
 
-<<<<<<< HEAD:src/main/MainApplication.java
     private void createPages(String username, String role) {
         // Set user info di navigation bar
         navigationBar.setUserInfo(username, role);
 
         // Tambahkan halaman-halaman
-=======
-    private void createPages() {
-        // ⬇️ simpan ke variabel global agar bisa dipanggil nanti
-        documentsPage = new MyDocuments();
-
->>>>>>> 20449b58d2e6a76dd79dd0b6cf1734c391372ff9:src/MainApplication.java
         JPanel homePage = createPlaceholderPage("Home Page", "Welcome to the Document Management System");
         JPanel documentsPage = new MyDocuments(); // Atau new MyDocuments(username, role) kalau kamu pakai parameter
         JPanel backupPage = createPlaceholderPage("Backup Page", "Backup and restore your documents");
