@@ -1,11 +1,13 @@
-package pages;
+package pages.Admin;
 
 import components.NavigationBar;
+import utils.UserDAO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 
 public class AdminDashboard extends JFrame implements NavigationBar.NavigationListener {
     private String username;
@@ -20,7 +22,7 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1400, 900);
         setLocationRelativeTo(null);
-        
+
         // Initialize components
         navigationBar = new NavigationBar();
         navigationBar.setNavigationListener(this);
@@ -41,12 +43,29 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
         // Add some vertical spacing
         contentPanel.add(Box.createVerticalStrut(30));
         
-        // Users section title
+        // Users section header with "See More" link
+        JPanel usersHeader = new JPanel(new BorderLayout());
+        usersHeader.setBackground(Color.WHITE);
+        usersHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+        usersHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        
         JLabel usersTitle = new JLabel("Users");
         usersTitle.setFont(new Font("SansSerif", Font.BOLD, 20));
-        usersTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        contentPanel.add(usersTitle);
+        usersHeader.add(usersTitle, BorderLayout.WEST);
+        
+        JLabel usersSeeMore = new JLabel("See More →");
+        usersSeeMore.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        usersSeeMore.setForeground(new Color(90, 106, 207));
+        usersSeeMore.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        usersSeeMore.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                openUserManagementPage();
+            }
+        });
+        usersHeader.add(usersSeeMore, BorderLayout.EAST);
+        
+        contentPanel.add(usersHeader);
         contentPanel.add(Box.createVerticalStrut(16));
         
         // Users table panel
@@ -54,11 +73,29 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
         contentPanel.add(usersTablePanel);
         contentPanel.add(Box.createVerticalStrut(30));
         
-        // Documents section title
+        // Documents section header with "See More" link
+        JPanel documentsHeader = new JPanel(new BorderLayout());
+        documentsHeader.setBackground(Color.WHITE);
+        documentsHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+        documentsHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        
         JLabel documentsTitle = new JLabel("Recent Documents");
         documentsTitle.setFont(new Font("SansSerif", Font.BOLD, 20));
-        documentsTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
-        contentPanel.add(documentsTitle);
+        documentsHeader.add(documentsTitle, BorderLayout.WEST);
+        
+        JLabel documentsSeeMore = new JLabel("See More →");
+        documentsSeeMore.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        documentsSeeMore.setForeground(new Color(90, 106, 207));
+        documentsSeeMore.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        documentsSeeMore.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                openDocumentsPage();
+            }
+        });
+        documentsHeader.add(documentsSeeMore, BorderLayout.EAST);
+        
+        contentPanel.add(documentsHeader);
         contentPanel.add(Box.createVerticalStrut(16));
         
         // Documents table panel
@@ -90,13 +127,20 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
         tablePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 350));
 
         String[] headers = {"Full Name", "Status", "Role", "Username", "Department", "Actions"};
-        Object[][] data = {
-                {"Olivia Rhye (@oliviarhye)", "● Active", "Employee", "oliviarhye", "Design", "actions"},
-                {"Phoenix Baker (@phoenixbaker)", "● Active", "Employee", "phoenixbaker", "Product", "actions"},
-                {"Lana Steiner (@lanasteiner)", "● Active", "Manager", "lanasteiner", "Marketing", "actions"},
-                {"Candice Wu (@candicewu)", "● Active", "Manager", "candicewu", "Finance", "actions"},
-                {"Drew Cano (@drewcano)", "● Active", "Employee", "drewcano", "Legal", "actions"}
-        };
+        
+        // Get users from database
+        List<UserDAO.User> dbUsers = UserDAO.getUsersForDashboard();
+        Object[][] data = new Object[dbUsers.size()][6];
+        
+        for (int i = 0; i < dbUsers.size(); i++) {
+            UserDAO.User user = dbUsers.get(i);
+            data[i][0] = user.fullName + " (@" + user.username + ")";
+            data[i][1] = "● " + user.status;
+            data[i][2] = user.role;
+            data[i][3] = user.username;
+            data[i][4] = user.department;
+            data[i][5] = "actions";
+        }
 
         // Header with fixed column widths
         JPanel headerRow = new JPanel();
@@ -214,6 +258,15 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
                         deleteLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                         deleteLabel.setToolTipText("Delete");
                         
+                        // Add click handler for delete
+                        final String currentRowUser = row[0].toString(); // Full name with username
+                        deleteLabel.addMouseListener(new MouseAdapter() {
+                            @Override
+                            public void mouseClicked(MouseEvent e) {
+                                AdminDashboard.this.showDeleteConfirmation(currentRowUser);
+                            }
+                        });
+                        
                         // Edit icon second
                         ImageIcon editOriginal = new ImageIcon("img/icon-edit.png");
                         Image editScaled = editOriginal.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
@@ -222,20 +275,42 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
                         editLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                         editLabel.setToolTipText("Edit");
                         
+                        // Add click handler for edit
+                        editLabel.addMouseListener(new MouseAdapter() {
+                            @Override
+                            public void mouseClicked(MouseEvent e) {
+                                AdminDashboard.this.openEditUserPage(currentRowUser);
+                            }
+                        });
+                        
                         actionsPanel.add(deleteLabel); // Bin first
                         actionsPanel.add(editLabel);   // Edit second
                         
                     } catch (Exception e) {
                         // Fallback icons
+                        final String currentRowUser = row[0].toString(); // Full name with username
+                        
                         JLabel deleteLabel = new JLabel("🗑");
                         deleteLabel.setFont(new Font("SansSerif", Font.PLAIN, 32));
                         deleteLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                         deleteLabel.setToolTipText("Delete");
+                        deleteLabel.addMouseListener(new MouseAdapter() {
+                            @Override
+                            public void mouseClicked(MouseEvent e) {
+                                AdminDashboard.this.showDeleteConfirmation(currentRowUser);
+                            }
+                        });
                         
                         JLabel editLabel = new JLabel("✎");
                         editLabel.setFont(new Font("SansSerif", Font.PLAIN, 32));
                         editLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                         editLabel.setToolTipText("Edit");
+                        editLabel.addMouseListener(new MouseAdapter() {
+                            @Override
+                            public void mouseClicked(MouseEvent e) {
+                                AdminDashboard.this.openEditUserPage(currentRowUser);
+                            }
+                        });
                         
                         actionsPanel.add(deleteLabel);
                         actionsPanel.add(editLabel);
@@ -291,7 +366,7 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
 
         return documentsContainer;
     }
-    
+
     private JPanel createDocumentCard(String title, String date) {
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
@@ -357,9 +432,9 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
     @Override
     public void onHomeClicked() {
         System.out.println("Home clicked from Admin Dashboard");
-    }
+        }
 
-    @Override
+        @Override
     public void onDocumentsClicked() {
         System.out.println("Documents clicked from Admin Dashboard");
     }
@@ -367,18 +442,124 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
     @Override
     public void onBackupClicked() {
         System.out.println("Backup clicked from Admin Dashboard");
-    }
+        }
 
-    @Override
+        @Override
     public void onNotificationClicked() {
         JOptionPane.showMessageDialog(this, "Admin notifications", "Notifications", JOptionPane.INFORMATION_MESSAGE);
-    }
+        }
 
-    @Override
+        @Override
     public void onLogoutClicked() {
         int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Confirm Logout", JOptionPane.YES_NO_OPTION);
         if (result == JOptionPane.YES_OPTION) {
             System.exit(0);
         }
+    }
+    
+    private void openUserManagementPage() {
+        this.dispose();
+        SwingUtilities.invokeLater(() -> {
+            new UserManagementDashboard(username, userRole);
+        });
+    }
+    
+    private void openDocumentsPage() {
+        System.out.println("Opening Documents page...");
+        // TODO: Implement documents page navigation
+    }
+    
+    private void showDeleteConfirmation(String userName) {
+        JDialog dialog = new JDialog(this, "Confirm Delete", true);
+        dialog.setSize(400, 200);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(Color.WHITE);
+        
+        // Warning panel
+        JPanel warningPanel = new JPanel();
+        warningPanel.setLayout(new BoxLayout(warningPanel, BoxLayout.Y_AXIS));
+        warningPanel.setBackground(Color.WHITE);
+        warningPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 20, 30));
+        
+        JLabel warningIcon = new JLabel("⚠️", JLabel.CENTER);
+        warningIcon.setFont(new Font("SansSerif", Font.PLAIN, 32));
+        warningIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JLabel warningText = new JLabel("Are you sure you want to", JLabel.CENTER);
+        warningText.setFont(new Font("SansSerif", Font.BOLD, 16));
+        warningText.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JLabel warningText2 = new JLabel("delete this user?", JLabel.CENTER);
+        warningText2.setFont(new Font("SansSerif", Font.BOLD, 16));
+        warningText2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        warningPanel.add(warningIcon);
+        warningPanel.add(Box.createVerticalStrut(10));
+        warningPanel.add(warningText);
+        warningPanel.add(warningText2);
+        
+        // Buttons panel
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 20));
+        buttonsPanel.setBackground(Color.WHITE);
+        
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        cancelBtn.setForeground(new Color(107, 114, 126));
+        cancelBtn.setBackground(Color.WHITE);
+        cancelBtn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
+            BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
+        cancelBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cancelBtn.addActionListener(e -> dialog.dispose());
+        
+        JButton deleteBtn = new JButton("Delete");
+        deleteBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        deleteBtn.setForeground(Color.WHITE);
+        deleteBtn.setBackground(new Color(220, 53, 69));
+        deleteBtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        deleteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        deleteBtn.addActionListener(e -> {
+            // Delete user from database using username
+            String usernameToDelete = extractUsername(userName);
+            if (UserDAO.deleteUser(usernameToDelete)) {
+                System.out.println("✅ User deleted successfully: " + userName);
+                JOptionPane.showMessageDialog(this, "User deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                                 // Refresh the users table
+                 SwingUtilities.invokeLater(() -> {
+                     AdminDashboard.this.dispose();
+                     new AdminDashboard(AdminDashboard.this.username, AdminDashboard.this.userRole);
+                 });
+            } else {
+                System.err.println("❌ Failed to delete user: " + userName);
+                JOptionPane.showMessageDialog(this, "Failed to delete user!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+            dialog.dispose();
+        });
+        
+        buttonsPanel.add(cancelBtn);
+        buttonsPanel.add(deleteBtn);
+        
+        dialog.add(warningPanel, BorderLayout.CENTER);
+        dialog.add(buttonsPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+    
+    private void openEditUserPage(String selectedUser) {
+        this.dispose();
+        SwingUtilities.invokeLater(() -> {
+            new EditUserPage(username, userRole, selectedUser);
+        });
+    }
+    
+    private String extractUsername(String fullUserName) {
+        // Extract username from "Full Name (@username)" format
+        if (fullUserName.contains("(@") && fullUserName.contains(")")) {
+            int start = fullUserName.indexOf("(@") + 2;
+            int end = fullUserName.indexOf(")", start);
+            return fullUserName.substring(start, end);
+        }
+        return fullUserName; // fallback
     }
 }
