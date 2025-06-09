@@ -11,10 +11,6 @@ import java.awt.event.ComponentEvent;
 import components.NavigationBar;
 import components.NavigationBar.NavigationListener;
 import pages.ManageDocuments.MyDocuments;
-// import pages.BackupConfiguration;
-// import pages.Dashboard.SearchDocuments;
-import pages.Login;
-
 
 public class Dashboard extends JFrame implements NavigationListener {
    private NavigationBar navigationBar;
@@ -341,7 +337,6 @@ public class Dashboard extends JFrame implements NavigationListener {
            frame.setVisible(true);
 
 
-                   // ✅ Trigger resize agar filter tampil dengan benar
            SwingUtilities.invokeLater(() -> {
                myDocs.dispatchEvent(new ComponentEvent(myDocs, ComponentEvent.COMPONENT_RESIZED));
            });
@@ -378,13 +373,4 @@ public class Dashboard extends JFrame implements NavigationListener {
        });
    }
 
-
-   /*
-   public static void main(String[] args) {
-       // Run the GUI in the Event Dispatch Thread
-       SwingUtilities.invokeLater(() -> {
-           new Dashboard("oliviarhye", "Karyawan");
-       });
-   }
-   */
 }
