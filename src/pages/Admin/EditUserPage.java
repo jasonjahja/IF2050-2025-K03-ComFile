@@ -21,6 +21,9 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
     private JComboBox<String> roleComboBox;
     private JComboBox<String> departmentComboBox;
     private JComboBox<String> statusComboBox;
+    private JPanel photoCircle;
+    private java.io.File selectedPhotoFile;
+    private String currentAvatarPath;
 
     public EditUserPage(String username, String userRole, String selectedUser) {
         this.username = username;
@@ -30,6 +33,7 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         // Load user data from database
         String extractedUsername = extractUsername(selectedUser);
         this.currentUser = UserDAO.getUserByUsername(extractedUsername);
+        this.currentAvatarPath = currentUser != null ? currentUser.avatarPath : null;
         
         setTitle("ComFile - Edit User");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -64,9 +68,25 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         contentPanel.add(headerPanel);
         contentPanel.add(Box.createVerticalStrut(30));
 
-        // Form panel
-        JPanel formPanel = createFormPanel();
-        contentPanel.add(formPanel);
+        // Main form container
+        JPanel formContainer = new JPanel(new BorderLayout());
+        formContainer.setBackground(Color.WHITE);
+        formContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formContainer.setMaximumSize(new Dimension(1200, 700));
+        
+        // Left side - Photo upload
+        JPanel leftPanel = createPhotoUploadPanel();
+        formContainer.add(leftPanel, BorderLayout.WEST);
+        
+        // Right side - Form fields
+        JPanel rightPanel = createFormPanel();
+        formContainer.add(rightPanel, BorderLayout.CENTER);
+        
+        contentPanel.add(formContainer);
+        
+        // Buttons panel
+        contentPanel.add(Box.createVerticalStrut(40));
+        contentPanel.add(createButtonsPanel());
 
         // Setup frame
         setLayout(new BorderLayout());
@@ -82,73 +102,125 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         formPanel.setBackground(Color.WHITE);
-        formPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        formPanel.setMaximumSize(new Dimension(600, Integer.MAX_VALUE));
-
-        // Photo upload section
-        JPanel photoSection = createPhotoUploadSection();
-        formPanel.add(photoSection);
-        formPanel.add(Box.createVerticalStrut(24));
-
-        // Full Name field
-        JPanel namePanel = createInputField("Full Name", currentUser != null ? currentUser.fullName : "");
-        fullNameField = (JTextField) namePanel.getComponent(2);
-        formPanel.add(namePanel);
-        formPanel.add(Box.createVerticalStrut(16));
-
-        // Username field
-        JPanel usernameFieldPanel = createInputField("Username", currentUser != null ? currentUser.username : "");
-        usernameField = (JTextField) usernameFieldPanel.getComponent(2);
-        formPanel.add(usernameFieldPanel);
-        formPanel.add(Box.createVerticalStrut(16));
-
-        // Password field
-        JPanel passwordPanel = createPasswordField();
-        formPanel.add(passwordPanel);
-        formPanel.add(Box.createVerticalStrut(24));
-
+        formPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 40));
+        
+        // Basic Information
+        formPanel.add(createFormField("Full Name", fullNameField = new JTextField(currentUser != null ? currentUser.fullName : "")));
+        formPanel.add(Box.createVerticalStrut(20));
+        
+        formPanel.add(createFormField("Username", usernameField = new JTextField(currentUser != null ? currentUser.username : "")));
+        formPanel.add(Box.createVerticalStrut(20));
+        
+        formPanel.add(createPasswordField("Password"));
+        formPanel.add(Box.createVerticalStrut(40));
+        
         // Access Control Section
-        JLabel accessLabel = new JLabel("Access Control");
-        accessLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        accessLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        formPanel.add(accessLabel);
-        formPanel.add(Box.createVerticalStrut(16));
-
-        // Role and Department in a row
-        JPanel roleDepPanel = new JPanel();
-        roleDepPanel.setLayout(new BoxLayout(roleDepPanel, BoxLayout.X_AXIS));
-        roleDepPanel.setBackground(Color.WHITE);
-        roleDepPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        roleDepPanel.setMaximumSize(new Dimension(600, 80));
-
-        JPanel rolePanel = createDropdownField("Role", new String[]{"Karyawan", "Manajer", "Admin"}, currentUser != null ? currentUser.role : "Karyawan");
-        roleComboBox = (JComboBox<String>) rolePanel.getComponent(2);
-        rolePanel.setPreferredSize(new Dimension(290, 80));
-        rolePanel.setMaximumSize(new Dimension(290, 80));
-
-        JPanel deptPanel = createDropdownField("Department", new String[]{"Design", "Product", "Marketing", "Finance", "Legal"}, currentUser != null ? currentUser.department : "Design");
-        departmentComboBox = (JComboBox<String>) deptPanel.getComponent(2);
-        deptPanel.setPreferredSize(new Dimension(290, 80));
-        deptPanel.setMaximumSize(new Dimension(290, 80));
-
-        roleDepPanel.add(rolePanel);
-        roleDepPanel.add(Box.createHorizontalStrut(20));
-        roleDepPanel.add(deptPanel);
-
-        formPanel.add(roleDepPanel);
-        formPanel.add(Box.createVerticalStrut(16));
-
+        JLabel accessControlTitle = new JLabel("Access Control");
+        accessControlTitle.setFont(new Font("SansSerif", Font.BOLD, 24));
+        accessControlTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(accessControlTitle);
+        formPanel.add(Box.createVerticalStrut(30));
+        
+        // Two-column layout for Role and Department
+        JPanel twoColumnPanel = new JPanel(new GridLayout(1, 2, 40, 0));
+        twoColumnPanel.setBackground(Color.WHITE);
+        twoColumnPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        twoColumnPanel.setMaximumSize(new Dimension(800, 80));
+        
+        twoColumnPanel.add(createComboField("Role", roleComboBox = new JComboBox<>(new String[]{"Karyawan", "Manajer", "Admin"})));
+        twoColumnPanel.add(createComboField("Department", departmentComboBox = new JComboBox<>(new String[]{"Design", "Product", "Marketing", "Finance", "Legal"})));
+        
+        // Set current values if user exists
+        if (currentUser != null) {
+            roleComboBox.setSelectedItem(currentUser.role);
+            departmentComboBox.setSelectedItem(currentUser.department);
+        }
+        
+        formPanel.add(twoColumnPanel);
+        formPanel.add(Box.createVerticalStrut(30));
+        
         // Status field
-        JPanel statusPanel = createDropdownField("Status", new String[]{"Active", "Inactive"}, currentUser != null ? currentUser.status : "Active");
-        statusComboBox = (JComboBox<String>) statusPanel.getComponent(2);
-        formPanel.add(statusPanel);
-        formPanel.add(Box.createVerticalStrut(32));
-
-        // Action buttons
-        JPanel buttonsPanel = createButtonsPanel();
-        formPanel.add(buttonsPanel);
-
+        formPanel.add(createComboField("Status", statusComboBox = new JComboBox<>(new String[]{"Active", "Inactive"})));
+        if (currentUser != null) {
+            statusComboBox.setSelectedItem(currentUser.status);
+        }
+        
         return formPanel;
+    }
+    
+    private JPanel createPhotoUploadPanel() {
+        JPanel photoPanel = new JPanel();
+        photoPanel.setLayout(new BoxLayout(photoPanel, BoxLayout.Y_AXIS));
+        photoPanel.setBackground(Color.WHITE);
+        photoPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 60));
+        photoPanel.setPreferredSize(new Dimension(350, 500));
+        
+        // Photo circle
+        photoCircle = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                // Try to load current avatar
+                String pathToLoad = selectedPhotoFile != null ? 
+                    selectedPhotoFile.getAbsolutePath() : currentAvatarPath;
+                    
+                if (pathToLoad != null) {
+                    ImageIcon avatar = UserDAO.loadProfilePicture(pathToLoad, getWidth(), getHeight());
+                    if (avatar != null) {
+                        g2.setClip(new java.awt.geom.Ellipse2D.Float(0, 0, getWidth(), getHeight()));
+                        g2.drawImage(avatar.getImage(), 0, 0, getWidth(), getHeight(), null);
+                        return;
+                    }
+                }
+                
+                // Default circle background
+                g2.setColor(new Color(156, 163, 175));
+                g2.fillOval(0, 0, getWidth(), getHeight());
+            }
+        };
+        photoCircle.setPreferredSize(new Dimension(200, 200));
+        photoCircle.setMaximumSize(new Dimension(200, 200));
+        photoCircle.setOpaque(false);
+        photoCircle.setLayout(new GridBagLayout());
+        photoCircle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        
+        // Photo content
+        JPanel photoContent = new JPanel();
+        photoContent.setLayout(new BoxLayout(photoContent, BoxLayout.Y_AXIS));
+        photoContent.setOpaque(false);
+        
+        JLabel cameraIcon = new JLabel("📷");
+        cameraIcon.setFont(new Font("SansSerif", Font.PLAIN, 32));
+        cameraIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
+        cameraIcon.setForeground(Color.WHITE);
+        
+        JLabel uploadText = new JLabel("Click to add photo");
+        uploadText.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        uploadText.setAlignmentX(Component.CENTER_ALIGNMENT);
+        uploadText.setForeground(Color.WHITE);
+        
+        photoContent.add(cameraIcon);
+        photoContent.add(Box.createVerticalStrut(5));
+        photoContent.add(uploadText);
+        
+        photoCircle.add(photoContent);
+        
+        // Add click listener for photo upload
+        photoCircle.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                uploadPhoto();
+            }
+        });
+        
+        photoPanel.add(Box.createVerticalGlue());
+        photoPanel.add(photoCircle);
+        photoPanel.add(Box.createVerticalGlue());
+        
+        return photoPanel;
     }
 
     private JPanel createPhotoUploadSection() {
@@ -199,54 +271,56 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         return photoPanel;
     }
 
-    private JPanel createInputField(String labelText, String value) {
+    private JPanel createFormField(String labelText, JTextField textField) {
         JPanel fieldPanel = new JPanel();
         fieldPanel.setLayout(new BoxLayout(fieldPanel, BoxLayout.Y_AXIS));
         fieldPanel.setBackground(Color.WHITE);
         fieldPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        fieldPanel.setMaximumSize(new Dimension(600, 80));
-
+        fieldPanel.setMaximumSize(new Dimension(800, 80));
+        
         JLabel label = new JLabel(labelText);
-        label.setFont(new Font("SansSerif", Font.BOLD, 14));
+        label.setFont(new Font("SansSerif", Font.BOLD, 16));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JTextField textField = new JTextField(value);
+        
         textField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
             BorderFactory.createEmptyBorder(12, 16, 12, 16)
         ));
-        textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-
+        textField.setMaximumSize(new Dimension(800, 45));
+        textField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
         fieldPanel.add(label);
         fieldPanel.add(Box.createVerticalStrut(8));
         fieldPanel.add(textField);
-
+        
         return fieldPanel;
     }
 
-    private JPanel createPasswordField() {
+    private JPanel createPasswordField(String labelText) {
         JPanel fieldPanel = new JPanel();
         fieldPanel.setLayout(new BoxLayout(fieldPanel, BoxLayout.Y_AXIS));
         fieldPanel.setBackground(Color.WHITE);
         fieldPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        fieldPanel.setMaximumSize(new Dimension(600, 80));
+        fieldPanel.setMaximumSize(new Dimension(800, 80));
 
-        JLabel label = new JLabel("Password");
-        label.setFont(new Font("SansSerif", Font.BOLD, 14));
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("SansSerif", Font.BOLD, 16));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel passwordContainer = new JPanel(new BorderLayout());
+        passwordContainer.setMaximumSize(new Dimension(800, 45));
         passwordContainer.setBorder(BorderFactory.createLineBorder(new Color(209, 213, 219), 1));
-        passwordContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        passwordContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        passwordField = new JPasswordField("********"); // Show placeholder for existing password
+        passwordField = new JPasswordField();
         passwordField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         passwordField.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
+        passwordField.setText("••••••••");
 
         eyeIcon = new JLabel("👁");
         eyeIcon.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        eyeIcon.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 16));
+        eyeIcon.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 16));
         eyeIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         eyeIcon.addMouseListener(new MouseAdapter() {
             @Override
@@ -262,6 +336,32 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         fieldPanel.add(Box.createVerticalStrut(8));
         fieldPanel.add(passwordContainer);
 
+        return fieldPanel;
+    }
+    
+    private JPanel createComboField(String labelText, JComboBox<String> comboBox) {
+        JPanel fieldPanel = new JPanel();
+        fieldPanel.setLayout(new BoxLayout(fieldPanel, BoxLayout.Y_AXIS));
+        fieldPanel.setBackground(Color.WHITE);
+        fieldPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("SansSerif", Font.BOLD, 16));
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        comboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        comboBox.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
+            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+        comboBox.setMaximumSize(new Dimension(380, 45));
+        comboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        comboBox.setBackground(Color.WHITE);
+        
+        fieldPanel.add(label);
+        fieldPanel.add(Box.createVerticalStrut(8));
+        fieldPanel.add(comboBox);
+        
         return fieldPanel;
     }
 
@@ -292,11 +392,11 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
     }
 
     private JPanel createButtonsPanel() {
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 0));
         buttonsPanel.setBackground(Color.WHITE);
         buttonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        buttonsPanel.setMaximumSize(new Dimension(600, 50));
-
+        buttonsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        
         JButton cancelBtn = new JButton("Cancel");
         cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 14));
         cancelBtn.setForeground(new Color(107, 114, 126));
@@ -307,7 +407,7 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         ));
         cancelBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         cancelBtn.addActionListener(e -> goBackToUserManagement());
-
+        
         JButton updateBtn = new JButton("Update User");
         updateBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
         updateBtn.setForeground(Color.WHITE);
@@ -315,14 +415,38 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         updateBtn.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
         updateBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         updateBtn.addActionListener(e -> updateUser());
-
+        
         buttonsPanel.add(cancelBtn);
-        buttonsPanel.add(Box.createHorizontalStrut(16));
         buttonsPanel.add(updateBtn);
-
+        
         return buttonsPanel;
     }
 
+    private void uploadPhoto() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+            @Override
+            public boolean accept(java.io.File f) {
+                return f.isDirectory() || f.getName().toLowerCase().matches(".*\\.(jpg|jpeg|png|gif)$");
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Image Files (*.jpg, *.jpeg, *.png, *.gif)";
+            }
+        });
+        
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            selectedPhotoFile = fileChooser.getSelectedFile();
+            
+            // Refresh the photo circle to show the new image
+            photoCircle.repaint();
+            
+            System.out.println("Photo selected: " + selectedPhotoFile.getName());
+        }
+    }
+    
     private void togglePasswordVisibility() {
         passwordVisible = !passwordVisible;
         if (passwordVisible) {
@@ -353,12 +477,28 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
             String status = (String) statusComboBox.getSelectedItem();
             
             // Use existing password if not changed
-            if (password.equals("********")) {
+            if (password.equals("••••••••")) {
                 password = currentUser.password;
             }
             
+            // Handle profile picture update
+            String newAvatarPath = currentAvatarPath; // Keep existing by default
+            if (selectedPhotoFile != null) {
+                // Delete old avatar if it exists
+                if (currentAvatarPath != null) {
+                    UserDAO.deleteProfilePicture(currentAvatarPath);
+                }
+                
+                // Save new avatar
+                newAvatarPath = UserDAO.saveProfilePicture(selectedPhotoFile, username);
+                if (newAvatarPath == null) {
+                    JOptionPane.showMessageDialog(this, "Failed to save new profile picture, keeping existing one.", "Warning", JOptionPane.WARNING_MESSAGE);
+                    newAvatarPath = currentAvatarPath; // Revert to existing
+                }
+            }
+            
             boolean success = UserDAO.updateUser(currentUser.username, fullName, username, password, 
-                                               role, department, status);
+                                               role, department, status, newAvatarPath);
             
             if (success) {
                 JOptionPane.showMessageDialog(this, "User updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);

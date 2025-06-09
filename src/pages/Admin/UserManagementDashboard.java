@@ -309,55 +309,94 @@ public class UserManagementDashboard extends JFrame implements NavigationBar.Nav
     
     private void showDeleteConfirmation(String userName) {
         JDialog dialog = new JDialog(this, "Confirm Delete", true);
-        dialog.setSize(400, 200);
+        dialog.setSize(480, 280);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout());
         dialog.getContentPane().setBackground(Color.WHITE);
+        dialog.setUndecorated(true);
+        dialog.getRootPane().setBorder(BorderFactory.createLineBorder(new Color(229, 231, 235), 1));
         
-        // Warning panel
+        // Header with close button
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(Color.WHITE);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 24, 10, 20));
+        
+        JLabel titleLabel = new JLabel("Confirm Delete");
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        titleLabel.setForeground(new Color(17, 24, 39));
+        
+        JLabel closeButton = new JLabel("✕");
+        closeButton.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        closeButton.setForeground(new Color(107, 114, 126));
+        closeButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        closeButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                dialog.dispose();
+            }
+        });
+        
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        headerPanel.add(closeButton, BorderLayout.EAST);
+        
+        // Content panel
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBackground(Color.WHITE);
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 24, 30, 24));
+        
+        // Warning icon and text
         JPanel warningPanel = new JPanel();
         warningPanel.setLayout(new BoxLayout(warningPanel, BoxLayout.Y_AXIS));
         warningPanel.setBackground(Color.WHITE);
-        warningPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 20, 30));
+        warningPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel warningIcon = new JLabel("⚠️", JLabel.CENTER);
-        warningIcon.setFont(new Font("SansSerif", Font.PLAIN, 32));
+        JLabel warningIcon = new JLabel("⚠", JLabel.CENTER);
+        warningIcon.setFont(new Font("SansSerif", Font.PLAIN, 48));
+        warningIcon.setForeground(new Color(245, 158, 11));
         warningIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         JLabel warningText = new JLabel("Are you sure you want to", JLabel.CENTER);
-        warningText.setFont(new Font("SansSerif", Font.BOLD, 16));
+        warningText.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        warningText.setForeground(new Color(55, 65, 81));
         warningText.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         JLabel warningText2 = new JLabel("delete this user?", JLabel.CENTER);
-        warningText2.setFont(new Font("SansSerif", Font.BOLD, 16));
+        warningText2.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        warningText2.setForeground(new Color(55, 65, 81));
         warningText2.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         warningPanel.add(warningIcon);
-        warningPanel.add(Box.createVerticalStrut(10));
+        warningPanel.add(Box.createVerticalStrut(20));
         warningPanel.add(warningText);
         warningPanel.add(warningText2);
         
+        contentPanel.add(warningPanel);
+        
         // Buttons panel
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 20));
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
         buttonsPanel.setBackground(Color.WHITE);
+        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(25, 0, 0, 0));
         
         JButton cancelBtn = new JButton("Cancel");
         cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        cancelBtn.setForeground(new Color(107, 114, 126));
+        cancelBtn.setForeground(new Color(55, 65, 81));
         cancelBtn.setBackground(Color.WHITE);
         cancelBtn.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
-            BorderFactory.createEmptyBorder(10, 20, 10, 20)
+            BorderFactory.createEmptyBorder(12, 24, 12, 24)
         ));
         cancelBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cancelBtn.setPreferredSize(new Dimension(100, 45));
         cancelBtn.addActionListener(e -> dialog.dispose());
         
         JButton deleteBtn = new JButton("Delete");
         deleteBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
         deleteBtn.setForeground(Color.WHITE);
-        deleteBtn.setBackground(new Color(220, 53, 69));
-        deleteBtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        deleteBtn.setBackground(new Color(239, 68, 68));
+        deleteBtn.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
         deleteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        deleteBtn.setPreferredSize(new Dimension(100, 45));
         deleteBtn.addActionListener(e -> {
             // Delete user from database using username
             String usernameToDelete = extractUsername(userName);
@@ -375,7 +414,8 @@ public class UserManagementDashboard extends JFrame implements NavigationBar.Nav
         buttonsPanel.add(cancelBtn);
         buttonsPanel.add(deleteBtn);
         
-        dialog.add(warningPanel, BorderLayout.CENTER);
+        dialog.add(headerPanel, BorderLayout.NORTH);
+        dialog.add(contentPanel, BorderLayout.CENTER);
         dialog.add(buttonsPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
     }

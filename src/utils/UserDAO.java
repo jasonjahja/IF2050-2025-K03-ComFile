@@ -3,6 +3,8 @@ package utils;
 import java.sql.*;
 import java.util.List;
 import java.util.ArrayList;
+import javax.swing.ImageIcon;
+import java.awt.Image;
 
 public class UserDAO {
     
@@ -13,15 +15,23 @@ public class UserDAO {
         public String fullName;
         public String department;
         public String status;
+        public String avatarPath;
         
         public User(String username, String password, String role, String fullName, 
-                   String department, String status) {
+                   String department, String status, String avatarPath) {
             this.username = username;
             this.password = password;
             this.role = role;
             this.fullName = fullName;
             this.department = department;
             this.status = status;
+            this.avatarPath = avatarPath;
+        }
+        
+        // Constructor without avatar for backward compatibility
+        public User(String username, String password, String role, String fullName, 
+                   String department, String status) {
+            this(username, password, role, fullName, department, status, null);
         }
     }
     
@@ -46,7 +56,8 @@ public class UserDAO {
                     rs.getString("role"),
                     rs.getString("full_name"),
                     rs.getString("department"),
-                    rs.getString("status")
+                    rs.getString("status"),
+                    rs.getString("avatar_path")
                 );
                 users.add(user);
             }
@@ -96,7 +107,8 @@ public class UserDAO {
                     rs.getString("role"),
                     rs.getString("full_name"),
                     rs.getString("department"),
-                    rs.getString("status")
+                    rs.getString("status"),
+                    rs.getString("avatar_path")
                 );
                 users.add(user);
             }
@@ -117,8 +129,14 @@ public class UserDAO {
     // Add new user
     public static boolean addUser(String fullName, String username, String password, 
                                 String role, String department, String status) {
-        String query = "INSERT INTO users (username, password, role, full_name, department, status) " +
-                      "VALUES (?, ?, ?, ?, ?, ?)";
+        return addUser(fullName, username, password, role, department, status, null);
+    }
+    
+    // Add new user with avatar
+    public static boolean addUser(String fullName, String username, String password, 
+                                String role, String department, String status, String avatarPath) {
+        String query = "INSERT INTO users (username, password, role, full_name, department, status, avatar_path) " +
+                      "VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -129,6 +147,7 @@ public class UserDAO {
             stmt.setString(4, fullName);
             stmt.setString(5, department);
             stmt.setString(6, status);
+            stmt.setString(7, avatarPath);
             
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
@@ -143,8 +162,14 @@ public class UserDAO {
     // Update existing user
     public static boolean updateUser(String originalUsername, String fullName, String username, String password,
                                    String role, String department, String status) {
+        return updateUser(originalUsername, fullName, username, password, role, department, status, null);
+    }
+    
+    // Update existing user with avatar
+    public static boolean updateUser(String originalUsername, String fullName, String username, String password,
+                                   String role, String department, String status, String avatarPath) {
         String query = "UPDATE users SET full_name = ?, username = ?, password = ?, role = ?, " +
-                      "department = ?, status = ? WHERE username = ?";
+                      "department = ?, status = ?, avatar_path = ? WHERE username = ?";
         
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -155,7 +180,8 @@ public class UserDAO {
             stmt.setString(4, role);
             stmt.setString(5, department);
             stmt.setString(6, status);
-            stmt.setString(7, originalUsername);
+            stmt.setString(7, avatarPath);
+            stmt.setString(8, originalUsername);
             
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
@@ -202,7 +228,8 @@ public class UserDAO {
                     rs.getString("role"),
                     rs.getString("full_name"),
                     rs.getString("department"),
-                    rs.getString("status")
+                    rs.getString("status"),
+                    rs.getString("avatar_path")
                 );
             }
             
@@ -230,6 +257,69 @@ public class UserDAO {
             e.printStackTrace();
             return false;
         }
+    }
+    
+    // Profile picture utility methods
+    public static String saveProfilePicture(java.io.File sourceFile, String username) {
+        try {
+            // Create avatars directory if it doesn't exist
+            java.io.File avatarsDir = new java.io.File("img/avatars");
+            if (!avatarsDir.exists()) {
+                avatarsDir.mkdirs();
+            }
+            
+            // Get file extension
+            String fileName = sourceFile.getName();
+            String extension = fileName.substring(fileName.lastIndexOf("."));
+            
+            // Create new filename: username + extension
+            String newFileName = username + extension;
+            java.io.File destFile = new java.io.File(avatarsDir, newFileName);
+            
+            // Copy file
+            java.nio.file.Files.copy(sourceFile.toPath(), destFile.toPath(), 
+                                   java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            
+            // Return relative path
+            return "img/avatars/" + newFileName;
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error saving profile picture: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    public static void deleteProfilePicture(String avatarPath) {
+        if (avatarPath != null && !avatarPath.isEmpty()) {
+            try {
+                java.io.File file = new java.io.File(avatarPath);
+                if (file.exists()) {
+                    file.delete();
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Error deleting profile picture: " + e.getMessage());
+            }
+        }
+    }
+    
+    public static ImageIcon loadProfilePicture(String avatarPath, int width, int height) {
+        if (avatarPath == null || avatarPath.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            java.io.File file = new java.io.File(avatarPath);
+            if (file.exists()) {
+                ImageIcon icon = new ImageIcon(file.getAbsolutePath());
+                Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                return new ImageIcon(img);
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error loading profile picture: " + e.getMessage());
+        }
+        
+        return null;
     }
     
     // Initialize demo data if users table is empty

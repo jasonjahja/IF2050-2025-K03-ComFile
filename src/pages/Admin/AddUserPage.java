@@ -18,6 +18,9 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
     private JComboBox<String> roleCombo;
     private JComboBox<String> departmentCombo;
     private JComboBox<String> statusCombo;
+    private JPanel photoCircle;
+    private java.io.File selectedPhotoFile;
+    private String currentAvatarPath;
 
     public AddUserPage(String username, String userRole) {
         this.username = username;
@@ -89,12 +92,24 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
         photoPanel.setPreferredSize(new Dimension(350, 500));
         
         // Photo circle
-        JPanel photoCircle = new JPanel() {
+        photoCircle = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                if (selectedPhotoFile != null) {
+                    // Draw the uploaded image
+                    ImageIcon avatar = UserDAO.loadProfilePicture(currentAvatarPath, getWidth(), getHeight());
+                    if (avatar != null) {
+                        g2.setClip(new java.awt.geom.Ellipse2D.Float(0, 0, getWidth(), getHeight()));
+                        g2.drawImage(avatar.getImage(), 0, 0, getWidth(), getHeight(), null);
+                        return;
+                    }
+                }
+                
+                // Default circle background
                 g2.setColor(new Color(156, 163, 175));
                 g2.fillOval(0, 0, getWidth(), getHeight());
             }
@@ -317,8 +332,15 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
         
         int result = fileChooser.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
-            // TODO: Handle photo upload
-            System.out.println("Photo selected: " + fileChooser.getSelectedFile().getName());
+            selectedPhotoFile = fileChooser.getSelectedFile();
+            
+            // Create temporary path for preview (we'll save it properly when creating the user)
+            currentAvatarPath = selectedPhotoFile.getAbsolutePath();
+            
+            // Refresh the photo circle to show the new image
+            photoCircle.repaint();
+            
+            System.out.println("Photo selected: " + selectedPhotoFile.getName());
         }
     }
     
@@ -342,8 +364,17 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
             return;
         }
         
-        // Add user to database
-        boolean success = UserDAO.addUser(fullName, username, password, role, department, status);
+        // Handle profile picture
+        String avatarPath = null;
+        if (selectedPhotoFile != null) {
+            avatarPath = UserDAO.saveProfilePicture(selectedPhotoFile, username);
+            if (avatarPath == null) {
+                JOptionPane.showMessageDialog(this, "Failed to save profile picture, but user will be created without it.", "Warning", JOptionPane.WARNING_MESSAGE);
+            }
+        }
+        
+        // Add user to database with avatar
+        boolean success = UserDAO.addUser(fullName, username, password, role, department, status, avatarPath);
         
         if (success) {
             System.out.println("✅ User created successfully: " + fullName + " (" + username + ")");
@@ -351,6 +382,10 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
             goBackToUserManagement();
         } else {
             System.err.println("❌ Failed to create user: " + fullName);
+            // Clean up saved avatar if user creation failed
+            if (avatarPath != null) {
+                UserDAO.deleteProfilePicture(avatarPath);
+            }
             JOptionPane.showMessageDialog(this, "Failed to create user! Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
