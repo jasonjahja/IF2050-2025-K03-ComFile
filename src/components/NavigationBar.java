@@ -45,7 +45,7 @@ public class NavigationBar extends JPanel {
         }
     }
     
-    private void setActivePage(String page) {
+    public void setActivePage(String page) {
         currentPage = page;
         for (Map.Entry<String, JLabel> entry : navLinks.entrySet()) {
             if (entry.getKey().equals(page)) {

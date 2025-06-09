@@ -4,6 +4,8 @@ import components.NavigationBar;
 // import java.awt.event.ComponentEvent;
 import pages.ManageDocuments.MyDocuments;
 import pages.Login;
+import utils.DocumentDAO;
+import pages.ManageDocuments.Document;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,6 +24,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         createPages(username, role);
         setupLayout();
         setVisible(true);
+        Document.users = DocumentDAO.loadAllUsers();
     }
 
     private void initializeApplication() {
@@ -49,7 +52,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
         // Tambahkan halaman-halaman
         JPanel homePage = createPlaceholderPage("Home Page", "Welcome to the Document Management System");
-        JPanel documentsPage = new MyDocuments(); // Atau new MyDocuments(username, role) kalau kamu pakai parameter
+        JPanel documentsPage = new MyDocuments();
         JPanel backupPage = createPlaceholderPage("Backup Page", "Backup and restore your documents");
 
         contentPanel.add(homePage, "HOME");
@@ -142,7 +145,10 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
     // ========== Untuk dipanggil setelah login ==========
     public static void startWithUser(String username, String role) {
-        SwingUtilities.invokeLater(() -> new MainApplication(username, role));
+        SwingUtilities.invokeLater(() -> {
+            Document.users = DocumentDAO.loadAllUsers();
+            new MainApplication(username, role);
+        });
     }
 
     // ========== Main Awal: Login page ==========

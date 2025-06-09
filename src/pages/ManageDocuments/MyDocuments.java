@@ -13,9 +13,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 public class MyDocuments extends JPanel {
     private JPanel documentsGrid;
@@ -25,6 +27,7 @@ public class MyDocuments extends JPanel {
     private static final int FILTER_WIDTH = 250;
     private SearchBar searchBar;
     private Filter filterComponent;
+    private List<Doc> cachedDocs = new ArrayList<>();
 
     public MyDocuments() {
         initializeComponents();
@@ -369,17 +372,20 @@ public class MyDocuments extends JPanel {
 
     private void loadDocumentsFromDatabase() {
         documentsGrid.removeAll();
-
-        List<Doc> docList = DocumentDAO.getAllDocumentsFromDB();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
 
-        if (docList.isEmpty()) {
+        List<Doc> allDocs = DocumentDAO.getAllDocumentsFromDB();
+        List<Doc> visibleDocs = allDocs.stream()
+                .filter(doc -> Document.hasAccess(doc, Document.currentUser))
+                .collect(Collectors.toList());
+
+        if (visibleDocs.isEmpty()) {
             JLabel emptyMsg = new JLabel("No documents found.");
             emptyMsg.setFont(new Font("SansSerif", Font.PLAIN, 14));
             emptyMsg.setHorizontalAlignment(SwingConstants.CENTER);
             documentsGrid.add(emptyMsg);
         } else {
-            for (Doc doc : docList) {
+            for (Doc doc : visibleDocs) {
                 File file = new File(doc.filePath);
                 String date = file.exists() ? dateFormat.format(file.lastModified()) : dateFormat.format(doc.modifiedDate);
                 documentsGrid.add(createDocumentCard(doc, date));
@@ -480,13 +486,46 @@ public class MyDocuments extends JPanel {
 
         JMenuItem manageAccess = new JMenuItem("Manage Access", personIcon);
         manageAccess.setFont(new Font("SansSerif", Font.BOLD, 12));
+        manageAccess.addActionListener(event -> {
+            JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(documentsGrid);
+
+            // Buat panel overlay gelap
+            JPanel darkOverlay = new JPanel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    g.setColor(new Color(0, 0, 0, 150)); // Semi-transparan hitam
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            };
+            darkOverlay.setOpaque(false);
+
+            // Set ke glass pane
+            topFrame.setGlassPane(darkOverlay);
+            topFrame.getGlassPane().setVisible(true);
+
+            // Tampilkan dialog AccessControl
+            JDialog accessDialog = new components.AccessControl(topFrame, doc.title, doc, Document.users);
+
+            // Ketika dialog ditutup, hilangkan overlay
+            accessDialog.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    topFrame.getGlassPane().setVisible(false);
+                }
+            });
+        });
 
         JMenuItem deleteDoc = new JMenuItem("Delete Document", binIcon);
         deleteDoc.setForeground(new Color(214, 41, 85));
         deleteDoc.setFont(new Font("SansSerif", Font.BOLD, 12));
 
-        popupMenu.add(manageAccess);
-        popupMenu.addSeparator();
+// Cek role sebelum menambahkan menu
+        if (Document.currentUser != null &&
+                (Document.currentUser.role.equalsIgnoreCase("Manajer") || Document.currentUser.role.equalsIgnoreCase("Admin"))) {
+            popupMenu.add(manageAccess);
+            popupMenu.addSeparator();
+        }
+
         popupMenu.add(deleteDoc);
 
         optionsLabel.addMouseListener(new MouseAdapter() {
@@ -739,18 +778,48 @@ public class MyDocuments extends JPanel {
     }
 
     public void refreshDocumentsAsync() {
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+        SwingWorker<List<Doc>, Void> worker = new SwingWorker<>() {
             @Override
-            protected Void doInBackground() {
-                loadDocumentsFromDatabase();
-                return null;
+            protected List<Doc> doInBackground() {
+                return DocumentDAO.getAllDocumentsFromDB();
             }
 
             @Override
             protected void done() {
+                try {
+                    cachedDocs = get();
+                    loadDocumentsFromList(cachedDocs);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         };
         worker.execute();
+    }
+
+    private void loadDocumentsFromList(List<Doc> docs) {
+        documentsGrid.removeAll();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+
+        List<Doc> visibleDocs = docs.stream()
+                .filter(doc -> Document.hasAccess(doc, Document.currentUser))
+                .toList();
+
+        if (visibleDocs.isEmpty()) {
+            JLabel emptyMsg = new JLabel("No documents found.");
+            emptyMsg.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            emptyMsg.setHorizontalAlignment(SwingConstants.CENTER);
+            documentsGrid.add(emptyMsg);
+        } else {
+            for (Doc doc : visibleDocs) {
+                File file = new File(doc.filePath);
+                String date = file.exists() ? dateFormat.format(file.lastModified()) : dateFormat.format(doc.modifiedDate);
+                documentsGrid.add(createDocumentCard(doc, date));
+            }
+        }
+
+        documentsGrid.revalidate();
+        documentsGrid.repaint();
     }
 
     private void filterAndSearch() {
@@ -787,7 +856,7 @@ public class MyDocuments extends JPanel {
     private List<Doc> getFilteredDocuments() {
         String keyword = searchBar.getSearchText().toLowerCase();
 
-        return DocumentDAO.getAllDocumentsFromDB().stream()
+        return cachedDocs.stream()
                 .filter(doc -> {
                     boolean matchesSearch = doc.title.toLowerCase().contains(keyword);
 

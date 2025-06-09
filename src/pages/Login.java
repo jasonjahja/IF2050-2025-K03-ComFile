@@ -3,6 +3,7 @@ package pages;
 import main.MainApplication;
 import pages.Dashboard.Dashboard;
 import pages.AdminDashboard;
+import pages.ManageDocuments.Document;
 import utils.DBConnection;
 
 import javax.swing.*;
@@ -135,6 +136,7 @@ public class Login extends JFrame {
             String role = getUserRoleFromDatabase(username, password);
             if (role != null) {
                 JOptionPane.showMessageDialog(this, "Login berhasil sebagai " + role);
+                Document.currentUser = new Document.User(username, username, role);
                 this.dispose();
                 if (role.equalsIgnoreCase("Admin")) {
                     new AdminDashboard(username, role);
