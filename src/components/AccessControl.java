@@ -366,6 +366,7 @@ public class AccessControl extends JDialog {
                         parent.remove(wrapper);
                     }
                     addedUsernames.remove(username);
+                    DocumentDAO.removeAccessFromDoc(currentDoc.id, username);
                     currentDoc.sharedWith.removeIf(p -> p.user.id.equals(username));
                     currentDoc.accessPermissions.removeIf(p -> p.user.id.equals(username));
                     peopleListPanel.revalidate();

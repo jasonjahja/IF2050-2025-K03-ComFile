@@ -286,4 +286,18 @@ public class DocumentDAO {
         return roles;
     }
 
+    public static void removeAccessFromDoc(String docId, String username) {
+        String query = "DELETE FROM document_access WHERE doc_id = ? AND username = ?";
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, docId);
+            stmt.setString(2, username);
+            stmt.executeUpdate();
+            System.out.println("🗑️ Access removed in DB for user: " + username + ", doc: " + docId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }
