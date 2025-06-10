@@ -9,31 +9,29 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
+import pages.ManageDocuments.Document.User;
 
 import pages.ManageDocuments.Document;
 import pages.ManageDocuments.Document.Doc;
 
 public class DocumentDAO {
 
-    // Simpan dokumen ke database, skip jika sudah ada berdasarkan ID
     public static void saveDocToDatabase(Doc doc) {
         String checkQuery = "SELECT 1 FROM documents WHERE id = ?";
-        String insertQuery = "INSERT INTO documents (id, title, content, owner_id, created_date, modified_date, last_opened_date, pages, file_type, file_size_kb, file_path) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String insertQuery = "INSERT INTO documents (id, title, content, owner_id, created_date, modified_date, last_opened_date, pages, file_type, file_size_kb, file_path, general_access_group, general_access_role) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.connect()) {
 
-            // Cek apakah dokumen sudah ada
             try (PreparedStatement checkStmt = conn.prepareStatement(checkQuery)) {
                 checkStmt.setString(1, doc.id);
                 ResultSet rs = checkStmt.executeQuery();
                 if (rs.next()) {
-                    System.out.println("⏩ Skip insert, sudah ada: " + doc.title);
+                    System.out.println("Skip insert, sudah ada: " + doc.title);
                     return;
                 }
             }
 
-            // Simpan dokumen baru
             try (PreparedStatement stmt = conn.prepareStatement(insertQuery)) {
                 stmt.setString(1, doc.id);
                 stmt.setString(2, doc.title);
@@ -46,6 +44,8 @@ public class DocumentDAO {
                 stmt.setString(9, doc.fileType);
                 stmt.setInt(10, doc.fileSizeKB);
                 stmt.setString(11, doc.filePath);
+                stmt.setString(12, doc.generalAccessGroup);
+                stmt.setString(13, doc.generalAccessRole);
 
                 stmt.executeUpdate();
                 System.out.println("✅ Berhasil simpan dokumen ke database: " + doc.title);
@@ -87,6 +87,10 @@ public class DocumentDAO {
     public static List<Document.Doc> getAllDocumentsFromDB() {
         List<Document.Doc> documents = new ArrayList<>();
 
+        if (Document.users == null || Document.users.isEmpty()) {
+            Document.users.putAll(loadAllUsers());
+        }
+
         String query = "SELECT * FROM documents";
 
         Map<String, List<Document.AccessPermission>> accessMap = getAllSharedAccess();
@@ -124,6 +128,9 @@ public class DocumentDAO {
                 doc.accessPermissions = new ArrayList<>(doc.sharedWith);
 
                 documents.add(doc);
+                System.out.println("🎯 Loading doc: " + title);
+                System.out.println("   generalAccessGroup = " + doc.generalAccessGroup);
+                System.out.println("   generalAccessRole  = " + doc.generalAccessRole);
             }
 
         } catch (Exception e) {
@@ -133,17 +140,22 @@ public class DocumentDAO {
         return documents;
     }
 
-    public static void saveUser(String username, String fullName, String role) {
-        String query = "INSERT INTO users (username, full_name, role) VALUES (?, ?, ?)";
+    public static void saveUser(String username, String fullName, String role, String department) {
+        String query = "INSERT INTO users (username, full_name, role, department) VALUES (?, ?, ?, ?) " +
+                "ON CONFLICT (username) DO UPDATE SET full_name = EXCLUDED.full_name, role = EXCLUDED.role, department = EXCLUDED.department";
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
             stmt.setString(2, fullName);
             stmt.setString(3, role);
+            stmt.setString(4, department);
             stmt.executeUpdate();
 
-            // update cache juga
-            Document.users.put(username, new Document.User(username, fullName, role));
+            Document.User fromDB = getUserFromDB(username);
+            if (fromDB != null) {
+                Document.users.put(username, fromDB);
+            }
+            System.out.println("✅ saveUser updated cache: " + username + " | dept=" + department);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -183,6 +195,9 @@ public class DocumentDAO {
                 String name = rs.getString("full_name");
                 String role = rs.getString("role");
                 String department = rs.getString("department");
+
+                System.out.println("👤 Loading user: " + id + " | Role: " + role + " | Dept: " + department); // ⬅️ Tambahkan ini
+
                 map.put(id, new Document.User(id, name, role, department));
             }
         } catch (Exception e) {
@@ -286,6 +301,28 @@ public class DocumentDAO {
         return roles;
     }
 
+    public static User getUserFromDB(String username) {
+        try (Connection conn = DBConnection.connect()) {
+            String sql = "SELECT * FROM users WHERE username = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Document.User(
+                        rs.getString("username"),
+                        rs.getString("full_name"),
+                        rs.getString("role"),
+                        rs.getString("department")
+                );
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
     public static void removeAccessFromDoc(String docId, String username) {
         String query = "DELETE FROM document_access WHERE doc_id = ? AND username = ?";
         try (Connection conn = DBConnection.connect();
@@ -298,6 +335,7 @@ public class DocumentDAO {
             e.printStackTrace();
         }
     }
+
 
 
 }

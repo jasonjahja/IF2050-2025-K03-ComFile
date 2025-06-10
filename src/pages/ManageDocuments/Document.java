@@ -18,8 +18,9 @@ public class Document {
         public String role;
         public String department;
 
+        @Deprecated
         public User(String id, String name, String role) {
-            this(id, name, role, ""); // default department kosong
+            this(id, name, role, "");
         }
 
         public User(String id, String name, String role, String department) {
@@ -43,6 +44,10 @@ public class Document {
 
         public String getDepartment() {
             return department;
+        }
+
+        public static User getUser(String username) {
+            return users.get(username);
         }
     }
 
@@ -141,6 +146,8 @@ public class Document {
             );
 
             documentList.add(doc);
+            //users.clear();
+            //users.putAll(DocumentDAO.loadAllUsers());
         }
     }
 
@@ -183,12 +190,13 @@ public class Document {
             String userDept = user.department != null ? user.department.trim().toLowerCase() : "";
             String group = doc.generalAccessGroup.trim().toLowerCase();
 
+            String accessRole = doc.generalAccessRole != null ? doc.generalAccessRole.trim().toLowerCase() : "";
             if (group.equals(userRole) || group.equals(userDept)) {
-                return doc.generalAccessRole.equals("Viewer") || doc.generalAccessRole.equals("Editor");
+                return accessRole.equals("viewer") || accessRole.equals("editor");
             }
         }
-
-
+        System.out.println("User: " + user.id + " | Role: " + user.role + " | Dept: " + user.department);
+        System.out.println("Doc: " + doc.title + " | Group: " + doc.generalAccessGroup + " | Role: " + doc.generalAccessRole);
         return false;
     }
 

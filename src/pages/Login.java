@@ -136,7 +136,7 @@ public class Login extends JFrame {
             String role = getUserRoleFromDatabase(username, password);
             if (role != null) {
                 JOptionPane.showMessageDialog(this, "Login berhasil sebagai " + role);
-                Document.currentUser = new Document.User(username, username, role);
+                Document.currentUser = Document.getUser(username);
                 this.dispose();
                 if (role.equalsIgnoreCase("Admin")) {
                     new AdminDashboard(username, role);

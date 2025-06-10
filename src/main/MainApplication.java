@@ -20,11 +20,20 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
     public MainApplication(String username, String role) {
         instance = this;
+
+        Document.users = DocumentDAO.loadAllUsers();
+        Document.currentUser = Document.getUser(username);
+        System.out.println("✅ SET currentUser: " + Document.currentUser.getUsername()
+                + " | Role: " + Document.currentUser.getRole()
+                + " | Dept: " + Document.currentUser.getDepartment());
+        System.out.println("✅ CurrentUser loaded: " + Document.currentUser.getUsername() +
+                " | Role: " + Document.currentUser.getRole() +
+                " | Dept: " + Document.currentUser.getDepartment());
+
         initializeApplication();
         createPages(username, role);
         setupLayout();
         setVisible(true);
-        Document.users = DocumentDAO.loadAllUsers();
     }
 
     private void initializeApplication() {
@@ -145,10 +154,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
     // ========== Untuk dipanggil setelah login ==========
     public static void startWithUser(String username, String role) {
-        SwingUtilities.invokeLater(() -> {
-            Document.users = DocumentDAO.loadAllUsers();
-            new MainApplication(username, role);
-        });
+        SwingUtilities.invokeLater(() -> new MainApplication(username, role));
     }
 
     // ========== Main Awal: Login page ==========

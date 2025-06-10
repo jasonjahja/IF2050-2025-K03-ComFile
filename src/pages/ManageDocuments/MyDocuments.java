@@ -787,7 +787,10 @@ public class MyDocuments extends JPanel {
             @Override
             protected void done() {
                 try {
-                    cachedDocs = get();
+                    List<Doc> all = get();
+                    cachedDocs = all.stream()
+                            .filter(doc -> Document.hasAccess(doc, Document.currentUser))
+                            .collect(Collectors.toList());
                     loadDocumentsFromList(cachedDocs);
                 } catch (Exception e) {
                     e.printStackTrace();

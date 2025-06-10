@@ -32,18 +32,22 @@ public class AccessControl extends JDialog {
             String username = addPeopleField.getText().trim();
             if (username.isEmpty()) return;
 
-            // Kalau belum ada di map, anggap sebagai user baru dan simpan ke DB
             if (!users.containsKey(username)) {
-                String fullName = username; // default: pakai username sebagai full name
+                String fullName = username;
                 String role = "Viewer";
+                String department = Document.users.containsKey(username)
+                        ? Document.users.get(username).getDepartment()
+                        : "";
 
-                // Simpan user ke database dan cache
-                DocumentDAO.saveUser(username, fullName, role);
-                users.put(username, new User(username, fullName, role));
-                System.out.println("✅ User baru ditambahkan ke database & cache: " + username);
+                DocumentDAO.saveUser(username, fullName, role, department);
+                Document.users.put(username, new User(username, fullName, role, department));
+                User updatedUser = DocumentDAO.getUserFromDB(username);
+                if (updatedUser != null) {
+                    Document.users.put(username, updatedUser);
+                    users.put(username, updatedUser);
+                }
             }
 
-            // Cek lagi apakah user sudah ditambahkan ke list
             if (addedUsernames.contains(username)) {
                 JOptionPane.showMessageDialog(this, "User already added!", "Warning", JOptionPane.WARNING_MESSAGE);
                 return;
@@ -446,7 +450,6 @@ public class AccessControl extends JDialog {
             // Dummy user
             Document.User dummyOwner = new Document.User("dummyuser", "Dummy User", "Owner");
 
-            // Tambahkan dummy user ke map users
             Map<String, Document.User> dummyUsers = new java.util.HashMap<>();
             dummyUsers.put(dummyOwner.getUsername(), dummyOwner);
 
@@ -465,7 +468,6 @@ public class AccessControl extends JDialog {
                     "/path/to/file.pdf"
             );
 
-            // Buka dialog akses kontrol dengan data dummy
             new AccessControl(dummyFrame, dummyDoc.title, dummyDoc, dummyUsers);
             dummyFrame.setVisible(false);
         });
