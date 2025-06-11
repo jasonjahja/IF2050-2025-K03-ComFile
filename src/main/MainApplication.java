@@ -56,7 +56,6 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
     private void createPages(String username, String role) {
         navigationBar.setUserInfo(username, role);
-
         java.awt.Container parentContainer = contentPanel;
 
         if (role.equalsIgnoreCase("Admin")) {
@@ -92,11 +91,11 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         ));
 
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel descLabel = new JLabel(description);
-        descLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        descLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
         descLabel.setForeground(Color.GRAY);
         descLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -120,13 +119,17 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
     @Override
     public void onHomeClicked() {
-        cardLayout.show(contentPanel, "HOME");
+        if (Document.currentUser != null && Document.currentUser.getRole().equalsIgnoreCase("Admin")) {
+            cardLayout.show(contentPanel, "ADMIN_DASHBOARD");
+        } else {
+            cardLayout.show(contentPanel, "HOME");
+        }
     }
 
     @Override
     public void onDocumentsClicked() {
         if (documentsPage != null) {
-            documentsPage.refreshDocumentsAsync();
+            documentsPage.refreshDocumentsAsync(); // Pakai versi async
         }
         cardLayout.show(contentPanel, "DOCUMENTS");
     }
@@ -166,6 +169,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         SwingUtilities.invokeLater(() -> new MainApplication(username, role));
     }
 
+    // ========== Main Awal: Login page ==========
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("ComFile Login");

@@ -129,7 +129,6 @@ public class DocumentDAO {
                 doc.sharedWith = accessMap.getOrDefault(id, new ArrayList<>());
                 doc.accessPermissions = new ArrayList<>(doc.sharedWith);
 
-                // 🛡 Filter dokumen berdasarkan akses
                 boolean isOwner = currentUser != null && owner != null && currentUser.id.equals(owner.id);
                 boolean hasSharedAccess = doc.accessPermissions.stream().anyMatch(p -> p.user.id.equals(currentUser.id));
                 boolean hasGeneralAccess = currentUser != null &&
@@ -140,8 +139,6 @@ public class DocumentDAO {
 
                 if (isOwner || hasSharedAccess || hasGeneralAccess) {
                     documents.add(doc);
-                } else {
-                    System.out.println("⛔ Dokumen disembunyikan: " + title + " (user: " + currentUser.id + ")");
                 }
             }
 
