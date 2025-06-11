@@ -147,8 +147,8 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
                 JOptionPane.YES_NO_OPTION);
 
         if (result == JOptionPane.YES_OPTION) {
-            dispose(); // Tutup window utama
-            new Login(); // Tampilkan login lagi
+            dispose();
+            new Login();
         }
     }
 

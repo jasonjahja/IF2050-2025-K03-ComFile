@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import javax.swing.plaf.basic.BasicComboBoxUI;
+import java.awt.event.ActionEvent;
 import java.util.Map;
 import pages.ManageDocuments.Document.User;
 import utils.DocumentDAO;
@@ -17,6 +18,8 @@ public class AccessControl extends JDialog {
     private JScrollPane scrollPane;
     private final java.util.Set<String> addedUsernames = new java.util.HashSet<>();
     private Document.Doc currentDoc;
+    private JComboBox<String> groupDropdown;
+    private JComboBox<String> roleDropdown;
 
     public AccessControl(JFrame parent, String docTitle, Document.Doc doc, Map<String, Document.User> users) {
         super(parent, "Share Document", true);
@@ -170,22 +173,70 @@ public class AccessControl extends JDialog {
         String[] roles = {"Viewer", "Remove Access"};
 
         Set<String> combinedGroupSet = new HashSet<>();
+        combinedGroupSet.add("Restricted");
         combinedGroupSet.addAll(DocumentDAO.getAllRoles());
         combinedGroupSet.addAll(DocumentDAO.getAllDepartments());
         combinedGroupSet.add("All Staff");
 
         String[] groups = combinedGroupSet.toArray(new String[0]);
 
-        JComboBox<String> groupDropdown = new JComboBox<>(groups);
+        groupDropdown = new JComboBox<>(groups);
         groupDropdown.setFont(new Font("Arial", Font.PLAIN, 13));
         groupDropdown.setPreferredSize(new Dimension(200, 36));
 
-        JComboBox<String> roleDropdown = new JComboBox<>(roles);
+        roleDropdown = new JComboBox<>(roles);
         roleDropdown.setFont(new Font("Arial", Font.PLAIN, 13));
         roleDropdown.setPreferredSize(new Dimension(120, 36));
 
-        groupDropdown.setSelectedItem(doc.generalAccessGroup);
-        roleDropdown.setSelectedItem(doc.generalAccessRole);
+        groupDropdown.setSelectedItem(doc.generalAccessGroup != null ? doc.generalAccessGroup : "Restricted");
+
+        String selected = doc.generalAccessGroup != null ? doc.generalAccessGroup : "Restricted";
+
+        boolean found = false;
+        for (int i = 0; i < groupDropdown.getItemCount(); i++) {
+            if (groupDropdown.getItemAt(i).equals(selected)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (found) {
+            groupDropdown.setSelectedItem(selected);
+        } else {
+            System.out.println("Group not found in combo box: " + selected + " — forcing to Restricted");
+            groupDropdown.setSelectedItem("Restricted");
+        }
+
+        if (!selected.equals(groupDropdown.getSelectedItem())) {
+            System.out.println("Warning: Value not matched in combo box. Forcing fallback.");
+            groupDropdown.setSelectedIndex(0);
+        }
+
+        if (doc.generalAccessRole == null || "Restricted".equals(doc.generalAccessGroup)) {
+            roleDropdown.setSelectedItem(null);
+            roleDropdown.setEnabled(false);
+        } else {
+            roleDropdown.setSelectedItem(doc.generalAccessRole);
+            roleDropdown.setEnabled(true);
+        }
+
+        if ("Restricted".equals(doc.generalAccessGroup)) {
+            roleDropdown.setSelectedItem(null);
+            roleDropdown.setEnabled(false);
+        }
+
+        groupDropdown.addActionListener(e -> {
+            String selectedGroup = (String) groupDropdown.getSelectedItem();
+            if ("Restricted".equals(selectedGroup)) {
+                roleDropdown.setSelectedItem(null);
+                roleDropdown.setEnabled(false);
+            } else {
+                roleDropdown.setEnabled(true);
+                if (roleDropdown.getSelectedItem() == null) {
+                    roleDropdown.setSelectedItem("Viewer");
+                }
+            }
+        });
 
         ImageIcon dropdownIcon = new ImageIcon("img/icon-dropdown.png");
 
@@ -253,7 +304,10 @@ public class AccessControl extends JDialog {
         doneButton.addActionListener(e -> {
             String selectedGroup = (String) groupDropdown.getSelectedItem();
             String selectedRole = (String) roleDropdown.getSelectedItem();
-
+            if ("Remove Access".equals(selectedRole)) {
+                selectedGroup = "Restricted";
+                selectedRole = null;
+            }
             DocumentDAO.updateGeneralAccess(currentDoc.id, selectedGroup, selectedRole);
             currentDoc.generalAccessGroup = selectedGroup;
             currentDoc.generalAccessRole = selectedRole;
@@ -364,18 +418,16 @@ public class AccessControl extends JDialog {
             ));
 
             roleDropdown.addActionListener(e -> {
-                if ("Remove Access".equals(roleDropdown.getSelectedItem())) {
-                    Container parent = wrapper.getParent();
-                    if (parent != null) {
-                        parent.remove(wrapper);
-                    }
-                    addedUsernames.remove(username);
-                    DocumentDAO.removeAccessFromDoc(currentDoc.id, username);
-                    currentDoc.sharedWith.removeIf(p -> p.user.id.equals(username));
-                    currentDoc.accessPermissions.removeIf(p -> p.user.id.equals(username));
-                    peopleListPanel.revalidate();
-                    peopleListPanel.repaint();
-                    updatePanelHeight();
+                String selectedRole = (String) roleDropdown.getSelectedItem();
+                if ("Remove Access".equals(selectedRole)) {
+                    groupDropdown.setSelectedItem("Restricted");
+
+                    groupDropdown.dispatchEvent(new ActionEvent(groupDropdown, ActionEvent.ACTION_PERFORMED, ""));
+
+                    roleDropdown.setSelectedItem(null);
+                    roleDropdown.setEnabled(false);
+
+                    System.out.println("General Access: Role di-set ke 'Remove Access' → Group auto 'Restricted', Role kosong.");
                 }
             });
 
@@ -453,7 +505,6 @@ public class AccessControl extends JDialog {
             Map<String, Document.User> dummyUsers = new java.util.HashMap<>();
             dummyUsers.put(dummyOwner.getUsername(), dummyOwner);
 
-            // Dummy document
             Document.Doc dummyDoc = new Document.Doc(
                     "dummy-id",
                     "File Name",

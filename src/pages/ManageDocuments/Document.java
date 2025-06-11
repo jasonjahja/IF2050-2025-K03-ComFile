@@ -111,7 +111,7 @@ public class Document {
         prepareUsers();
         currentUser = users.get("phoenixbaker"); // login user
 
-        User michael = users.get("michaelscott");
+        User owner = currentUser;
 
         // Path dokumen lokal
         String basePath = "/Users/audrazelvania/Downloads/";
@@ -133,19 +133,22 @@ public class Document {
                 fileType = filenames[i].substring(dotIndex + 1).toUpperCase();
             }
 
-            Doc doc = new Doc(
-                    "doc" + String.format("%03d", i + 1),
-                    filenames[i].substring(0, dotIndex),
-                    "This is a placeholder content for testing.",
-                    michael,
-                    modified, modified, modified,
+            Document.Doc newDoc = new Document.Doc(
+                    UUID.randomUUID().toString(),
+                    file.getName(),
+                    "Uploaded via UI",
+                    Document.currentUser,
+                    new Date(), new Date(), new Date(),
                     (i + 1) * 10,
                     fileType,
                     size,
                     file.getAbsolutePath()
             );
 
-            documentList.add(doc);
+            newDoc.generalAccessGroup = "Restricted";
+            newDoc.generalAccessRole = null;
+
+            documentList.add(newDoc);
             //users.clear();
             //users.putAll(DocumentDAO.loadAllUsers());
         }

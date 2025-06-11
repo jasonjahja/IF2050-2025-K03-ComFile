@@ -4,11 +4,9 @@ import components.SearchBar;
 import components.Filter;
 import pages.ManageDocuments.Document.Doc;
 import utils.DocumentDAO;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentListener;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -44,7 +42,9 @@ public class MyDocuments extends JPanel {
         documentsGrid.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         documentsWrapper = new JPanel(new BorderLayout());
-        documentsWrapper.setPreferredSize(new Dimension(800, 400));
+        documentsWrapper.setPreferredSize(null); // atau cukup hapus baris ini
+        documentsWrapper.setBackground(new Color(248, 249, 250));
+        documentsWrapper.removeAll();
         documentsWrapper.add(documentsGrid, BorderLayout.NORTH);
     }
 
@@ -70,7 +70,7 @@ public class MyDocuments extends JPanel {
         documentsContainer.setBackground(new Color(248, 249, 250));
 
         JScrollPane documentsScrollPane = new JScrollPane(documentsWrapper);
-        documentsGrid.setOpaque(false);
+        documentsScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS); // ⬅️ paksa scrollbar tampil
         documentsScrollPane.setBorder(null);
         documentsScrollPane.getVerticalScrollBar().setUnitIncrement(16);
         documentsScrollPane.setBackground(new Color(248, 249, 250));
@@ -340,7 +340,6 @@ public class MyDocuments extends JPanel {
             topFrame.getGlassPane().setVisible(true);
         });
 
-
         headerPanel.add(title, BorderLayout.WEST);
         headerPanel.add(addButton, BorderLayout.EAST);
 
@@ -440,17 +439,14 @@ public class MyDocuments extends JPanel {
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(Color.WHITE);
-
         JLabel docTitle = new JLabel(doc.title);
         docTitle.setFont(new Font("Arial", Font.BOLD, 13));
         docTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         docTitle.setBorder(new EmptyBorder(5, 0, 2, 0));
-
         JLabel docDate = new JLabel(dateText);
         docDate.setFont(new Font("Arial", Font.PLAIN, 11));
         docDate.setForeground(new Color(100, 100, 100));
         docDate.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         infoPanel.add(docTitle);
         infoPanel.add(docDate);
 
@@ -525,7 +521,6 @@ public class MyDocuments extends JPanel {
             popupMenu.add(manageAccess);
             popupMenu.addSeparator();
         }
-
         popupMenu.add(deleteDoc);
 
         optionsLabel.addMouseListener(new MouseAdapter() {
@@ -541,9 +536,7 @@ public class MyDocuments extends JPanel {
             showDeleteConfirmation(parentWindow, doc.title, () -> {
                 boolean fileDeleted = fileToDelete.delete();
                 System.out.println("File deleted? " + fileDeleted);
-
                 DocumentDAO.deleteDocumentById(doc.id);
-
                 refreshDocumentsAsync();
             });
         });
@@ -807,7 +800,6 @@ public class MyDocuments extends JPanel {
         List<Doc> visibleDocs = docs.stream()
                 .filter(doc -> Document.hasAccess(doc, Document.currentUser))
                 .toList();
-
         if (visibleDocs.isEmpty()) {
             JLabel emptyMsg = new JLabel("No documents found.");
             emptyMsg.setFont(new Font("SansSerif", Font.PLAIN, 14));

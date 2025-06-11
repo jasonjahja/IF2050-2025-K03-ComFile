@@ -48,11 +48,11 @@ public class DocumentDAO {
                 stmt.setString(13, doc.generalAccessRole);
 
                 stmt.executeUpdate();
-                System.out.println("✅ Berhasil simpan dokumen ke database: " + doc.title);
+                System.out.println("Berhasil simpan dokumen ke database: " + doc.title);
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Gagal menyimpan dokumen: " + doc.title);
+            System.err.println("Gagal menyimpan dokumen: " + doc.title);
             e.printStackTrace();
         }
     }
@@ -120,17 +120,20 @@ public class DocumentDAO {
                         pages, fileType, fileSizeKB, filePath
                 );
 
-                doc.generalAccessGroup = rs.getString("general_access_group");
-                doc.generalAccessRole = rs.getString("general_access_role");
+                String rawGroup = rs.getString("general_access_group");
+                String rawRole = rs.getString("general_access_role");
+
+                doc.generalAccessGroup = (rawGroup == null || rawGroup.trim().isEmpty()) ? "Restricted" : rawGroup;
+                doc.generalAccessRole = (rawRole != null && !rawRole.trim().isEmpty()) ? rawRole : null;
 
                 // Gunakan shared access yang sudah di-load semua sebelumnya
                 doc.sharedWith = accessMap.getOrDefault(id, new ArrayList<>());
                 doc.accessPermissions = new ArrayList<>(doc.sharedWith);
 
                 documents.add(doc);
-                System.out.println("🎯 Loading doc: " + title);
-                System.out.println("   generalAccessGroup = " + doc.generalAccessGroup);
-                System.out.println("   generalAccessRole  = " + doc.generalAccessRole);
+                System.out.println("Loading doc: " + title);
+                System.out.println("generalAccessGroup = " + doc.generalAccessGroup);
+                System.out.println("generalAccessRole  = " + doc.generalAccessRole);
             }
 
         } catch (Exception e) {
@@ -155,7 +158,7 @@ public class DocumentDAO {
             if (fromDB != null) {
                 Document.users.put(username, fromDB);
             }
-            System.out.println("✅ saveUser updated cache: " + username + " | dept=" + department);
+            System.out.println("saveUser updated cache: " + username + " | dept=" + department);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -196,7 +199,7 @@ public class DocumentDAO {
                 String role = rs.getString("role");
                 String department = rs.getString("department");
 
-                System.out.println("👤 Loading user: " + id + " | Role: " + role + " | Dept: " + department); // ⬅️ Tambahkan ini
+                System.out.println("👤 Loading user: " + id + " | Role: " + role + " | Dept: " + department);
 
                 map.put(id, new Document.User(id, name, role, department));
             }
@@ -275,7 +278,7 @@ public class DocumentDAO {
             stmt.setString(2, role);
             stmt.setString(3, docId);
             stmt.executeUpdate();
-            System.out.println("✅ General access updated in DB for doc: " + docId);
+            System.out.println("General access updated in DB for doc: " + docId);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -322,7 +325,6 @@ public class DocumentDAO {
         return null;
     }
 
-
     public static void removeAccessFromDoc(String docId, String username) {
         String query = "DELETE FROM document_access WHERE doc_id = ? AND username = ?";
         try (Connection conn = DBConnection.connect();
@@ -330,12 +332,9 @@ public class DocumentDAO {
             stmt.setString(1, docId);
             stmt.setString(2, username);
             stmt.executeUpdate();
-            System.out.println("🗑️ Access removed in DB for user: " + username + ", doc: " + docId);
+            System.out.println("Access removed in DB for user: " + username + ", doc: " + docId);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
-
-
 }
