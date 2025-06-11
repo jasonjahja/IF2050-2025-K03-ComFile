@@ -420,14 +420,22 @@ public class AccessControl extends JDialog {
             roleDropdown.addActionListener(e -> {
                 String selectedRole = (String) roleDropdown.getSelectedItem();
                 if ("Remove Access".equals(selectedRole)) {
-                    groupDropdown.setSelectedItem("Restricted");
+                    // Hapus dari database
+                    DocumentDAO.removeAccessFromDoc(currentDoc.id, username);
 
-                    groupDropdown.dispatchEvent(new ActionEvent(groupDropdown, ActionEvent.ACTION_PERFORMED, ""));
+                    // Hapus dari currentDoc list
+                    currentDoc.sharedWith.removeIf(ap -> ap.user.id.equals(username));
+                    currentDoc.accessPermissions.removeIf(ap -> ap.user.id.equals(username));
+                    addedUsernames.remove(username);
 
-                    roleDropdown.setSelectedItem(null);
-                    roleDropdown.setEnabled(false);
+                    // Hapus komponen UI
+                    peopleListPanel.remove(wrapper);
+                    peopleListPanel.revalidate();
+                    peopleListPanel.repaint();
 
-                    System.out.println("General Access: Role di-set ke 'Remove Access' → Group auto 'Restricted', Role kosong.");
+                    updatePanelHeight();
+
+                    System.out.println("Access removed for: " + username);
                 }
             });
 
