@@ -10,7 +10,7 @@ public class DBConnection {
             String password = "npg_5xOmPolVg8hv";
 
             Connection conn = DriverManager.getConnection(url, user, password);
-            System.out.println("➡️ DBConnection.connect() called from: " + Thread.currentThread().getStackTrace()[4]);
+            System.out.println("✅ Berhasil connect ke database");
             return conn;
         } catch (Exception e) {
             System.err.println("❌ Gagal connect ke database:");
