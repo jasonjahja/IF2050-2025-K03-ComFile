@@ -4,18 +4,18 @@ import components.SearchBar;
 import components.Filter;
 import pages.ManageDocuments.Document.Doc;
 import utils.DocumentDAO;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentListener;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 public class MyDocuments extends JPanel {
     private JPanel documentsGrid;
@@ -25,7 +25,6 @@ public class MyDocuments extends JPanel {
     private static final int FILTER_WIDTH = 250;
     private SearchBar searchBar;
     private Filter filterComponent;
-    private List<Doc> cachedDocs = new ArrayList<>();
 
     public MyDocuments() {
         initializeComponents();
@@ -42,9 +41,7 @@ public class MyDocuments extends JPanel {
         documentsGrid.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         documentsWrapper = new JPanel(new BorderLayout());
-        documentsWrapper.setPreferredSize(null); // atau cukup hapus baris ini
-        documentsWrapper.setBackground(new Color(248, 249, 250));
-        documentsWrapper.removeAll();
+        documentsWrapper.setPreferredSize(new Dimension(800, 400));
         documentsWrapper.add(documentsGrid, BorderLayout.NORTH);
     }
 
@@ -70,7 +67,7 @@ public class MyDocuments extends JPanel {
         documentsContainer.setBackground(new Color(248, 249, 250));
 
         JScrollPane documentsScrollPane = new JScrollPane(documentsWrapper);
-        documentsScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS); // ⬅️ paksa scrollbar tampil
+        documentsGrid.setOpaque(false);
         documentsScrollPane.setBorder(null);
         documentsScrollPane.getVerticalScrollBar().setUnitIncrement(16);
         documentsScrollPane.setBackground(new Color(248, 249, 250));
@@ -340,6 +337,7 @@ public class MyDocuments extends JPanel {
             topFrame.getGlassPane().setVisible(true);
         });
 
+
         headerPanel.add(title, BorderLayout.WEST);
         headerPanel.add(addButton, BorderLayout.EAST);
 
@@ -371,20 +369,17 @@ public class MyDocuments extends JPanel {
 
     private void loadDocumentsFromDatabase() {
         documentsGrid.removeAll();
+
+        List<Doc> docList = DocumentDAO.getAllDocumentsFromDB();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
 
-        List<Doc> allDocs = DocumentDAO.getAllDocumentsFromDB();
-        List<Doc> visibleDocs = allDocs.stream()
-                .filter(doc -> Document.hasAccess(doc, Document.currentUser))
-                .collect(Collectors.toList());
-
-        if (visibleDocs.isEmpty()) {
+        if (docList.isEmpty()) {
             JLabel emptyMsg = new JLabel("No documents found.");
             emptyMsg.setFont(new Font("SansSerif", Font.PLAIN, 14));
             emptyMsg.setHorizontalAlignment(SwingConstants.CENTER);
             documentsGrid.add(emptyMsg);
         } else {
-            for (Doc doc : visibleDocs) {
+            for (Doc doc : docList) {
                 File file = new File(doc.filePath);
                 String date = file.exists() ? dateFormat.format(file.lastModified()) : dateFormat.format(doc.modifiedDate);
                 documentsGrid.add(createDocumentCard(doc, date));
@@ -439,14 +434,17 @@ public class MyDocuments extends JPanel {
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(Color.WHITE);
+
         JLabel docTitle = new JLabel(doc.title);
         docTitle.setFont(new Font("Arial", Font.BOLD, 13));
         docTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         docTitle.setBorder(new EmptyBorder(5, 0, 2, 0));
+
         JLabel docDate = new JLabel(dateText);
         docDate.setFont(new Font("Arial", Font.PLAIN, 11));
         docDate.setForeground(new Color(100, 100, 100));
         docDate.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         infoPanel.add(docTitle);
         infoPanel.add(docDate);
 
@@ -482,45 +480,13 @@ public class MyDocuments extends JPanel {
 
         JMenuItem manageAccess = new JMenuItem("Manage Access", personIcon);
         manageAccess.setFont(new Font("SansSerif", Font.BOLD, 12));
-        manageAccess.addActionListener(event -> {
-            JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(documentsGrid);
-
-            // Buat panel overlay gelap
-            JPanel darkOverlay = new JPanel() {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    g.setColor(new Color(0, 0, 0, 150)); // Semi-transparan hitam
-                    g.fillRect(0, 0, getWidth(), getHeight());
-                }
-            };
-            darkOverlay.setOpaque(false);
-
-            // Set ke glass pane
-            topFrame.setGlassPane(darkOverlay);
-            topFrame.getGlassPane().setVisible(true);
-
-            // Tampilkan dialog AccessControl
-            JDialog accessDialog = new components.AccessControl(topFrame, doc.title, doc, Document.users);
-
-            // Ketika dialog ditutup, hilangkan overlay
-            accessDialog.addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosed(WindowEvent e) {
-                    topFrame.getGlassPane().setVisible(false);
-                }
-            });
-        });
 
         JMenuItem deleteDoc = new JMenuItem("Delete Document", binIcon);
         deleteDoc.setForeground(new Color(214, 41, 85));
         deleteDoc.setFont(new Font("SansSerif", Font.BOLD, 12));
 
-// Cek role sebelum menambahkan menu
-        if (Document.currentUser != null &&
-                (Document.currentUser.role.equalsIgnoreCase("Manajer") || Document.currentUser.role.equalsIgnoreCase("Admin"))) {
-            popupMenu.add(manageAccess);
-            popupMenu.addSeparator();
-        }
+        popupMenu.add(manageAccess);
+        popupMenu.addSeparator();
         popupMenu.add(deleteDoc);
 
         optionsLabel.addMouseListener(new MouseAdapter() {
@@ -536,7 +502,9 @@ public class MyDocuments extends JPanel {
             showDeleteConfirmation(parentWindow, doc.title, () -> {
                 boolean fileDeleted = fileToDelete.delete();
                 System.out.println("File deleted? " + fileDeleted);
+
                 DocumentDAO.deleteDocumentById(doc.id);
+
                 refreshDocumentsAsync();
             });
         });
@@ -771,50 +739,18 @@ public class MyDocuments extends JPanel {
     }
 
     public void refreshDocumentsAsync() {
-        SwingWorker<List<Doc>, Void> worker = new SwingWorker<>() {
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
-            protected List<Doc> doInBackground() {
-                return DocumentDAO.getAllDocumentsFromDB();
+            protected Void doInBackground() {
+                loadDocumentsFromDatabase();
+                return null;
             }
 
             @Override
             protected void done() {
-                try {
-                    List<Doc> all = get();
-                    cachedDocs = all.stream()
-                            .filter(doc -> Document.hasAccess(doc, Document.currentUser))
-                            .collect(Collectors.toList());
-                    loadDocumentsFromList(cachedDocs);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
             }
         };
         worker.execute();
-    }
-
-    private void loadDocumentsFromList(List<Doc> docs) {
-        documentsGrid.removeAll();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-
-        List<Doc> visibleDocs = docs.stream()
-                .filter(doc -> Document.hasAccess(doc, Document.currentUser))
-                .toList();
-        if (visibleDocs.isEmpty()) {
-            JLabel emptyMsg = new JLabel("No documents found.");
-            emptyMsg.setFont(new Font("SansSerif", Font.PLAIN, 14));
-            emptyMsg.setHorizontalAlignment(SwingConstants.CENTER);
-            documentsGrid.add(emptyMsg);
-        } else {
-            for (Doc doc : visibleDocs) {
-                File file = new File(doc.filePath);
-                String date = file.exists() ? dateFormat.format(file.lastModified()) : dateFormat.format(doc.modifiedDate);
-                documentsGrid.add(createDocumentCard(doc, date));
-            }
-        }
-
-        documentsGrid.revalidate();
-        documentsGrid.repaint();
     }
 
     private void filterAndSearch() {
@@ -851,7 +787,7 @@ public class MyDocuments extends JPanel {
     private List<Doc> getFilteredDocuments() {
         String keyword = searchBar.getSearchText().toLowerCase();
 
-        return cachedDocs.stream()
+        return DocumentDAO.getAllDocumentsFromDB().stream()
                 .filter(doc -> {
                     boolean matchesSearch = doc.title.toLowerCase().contains(keyword);
 
