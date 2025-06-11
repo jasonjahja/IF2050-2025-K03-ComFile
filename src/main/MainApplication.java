@@ -1,11 +1,12 @@
 package main;
 
 import components.NavigationBar;
-// import java.awt.event.ComponentEvent;
 import pages.ManageDocuments.MyDocuments;
 import pages.Login;
 import utils.DocumentDAO;
 import pages.ManageDocuments.Document;
+import pages.Dashboard.Dashboard;
+import pages.Admin.AdminDashboard;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,14 +22,12 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
     public MainApplication(String username, String role) {
         instance = this;
 
+        // Setup user from accesscontrol branch
         Document.users = DocumentDAO.loadAllUsers();
         Document.currentUser = Document.getUser(username);
         System.out.println("✅ SET currentUser: " + Document.currentUser.getUsername()
                 + " | Role: " + Document.currentUser.getRole()
                 + " | Dept: " + Document.currentUser.getDepartment());
-        System.out.println("✅ CurrentUser loaded: " + Document.currentUser.getUsername() +
-                " | Role: " + Document.currentUser.getRole() +
-                " | Dept: " + Document.currentUser.getDepartment());
 
         initializeApplication();
         createPages(username, role);
@@ -56,19 +55,25 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
     }
 
     private void createPages(String username, String role) {
-        // Set user info di navigation bar
         navigationBar.setUserInfo(username, role);
 
-        // Tambahkan halaman-halaman
-        JPanel homePage = createPlaceholderPage("Home Page", "Welcome to the Document Management System");
-        JPanel documentsPage = new MyDocuments();
+        java.awt.Container parentContainer = contentPanel;
+
+        if (role.equalsIgnoreCase("Admin")) {
+            AdminDashboard adminDashboard = new AdminDashboard(username, role, parentContainer);
+            contentPanel.add(adminDashboard, "ADMIN_DASHBOARD");
+            cardLayout.show(contentPanel, "ADMIN_DASHBOARD");
+        } else {
+            Dashboard dashboard = new Dashboard(username, role);
+            contentPanel.add(dashboard, "HOME");
+            cardLayout.show(contentPanel, "HOME");
+        }
+
+        documentsPage = new MyDocuments();
         JPanel backupPage = createPlaceholderPage("Backup Page", "Backup and restore your documents");
 
-        contentPanel.add(homePage, "HOME");
         contentPanel.add(documentsPage, "DOCUMENTS");
         contentPanel.add(backupPage, "BACKUP");
-
-        cardLayout.show(contentPanel, "HOME");
     }
 
     private JPanel createPlaceholderPage(String title, String description) {
@@ -121,7 +126,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
     @Override
     public void onDocumentsClicked() {
         if (documentsPage != null) {
-            documentsPage.refreshDocuments();
+            documentsPage.refreshDocumentsAsync();
         }
         cardLayout.show(contentPanel, "DOCUMENTS");
     }
@@ -148,17 +153,31 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
         if (result == JOptionPane.YES_OPTION) {
             dispose();
-            new Login();
+            JFrame frame = new JFrame("ComFile Login");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(1080, 720);
+            frame.setLocationRelativeTo(null);
+            frame.setContentPane(new Login(frame));
+            frame.setVisible(true);
         }
     }
 
-    // ========== Untuk dipanggil setelah login ==========
     public static void startWithUser(String username, String role) {
         SwingUtilities.invokeLater(() -> new MainApplication(username, role));
     }
 
-    // ========== Main Awal: Login page ==========
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Login());
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("ComFile Login");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(1080, 720);
+            frame.setLocationRelativeTo(null);
+            frame.setContentPane(new Login(frame));
+            frame.setVisible(true);
+        });
+    }
+
+    public static MainApplication getInstance() {
+        return instance;
     }
 }
