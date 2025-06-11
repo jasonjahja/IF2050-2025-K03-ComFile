@@ -11,12 +11,10 @@ import java.awt.event.ComponentEvent;
 import components.NavigationBar;
 import components.NavigationBar.NavigationListener;
 import pages.ManageDocuments.MyDocuments;
-// import pages.BackupConfiguration;
-// import pages.Dashboard.SearchDocuments;
 import pages.Login;
+import main.MainApplication;
 
-
-public class Dashboard extends JFrame implements NavigationListener {
+public class Dashboard extends JPanel implements NavigationListener {
    private NavigationBar navigationBar;
    private JPanel searchPanel;
    private JLabel searchIcon;
@@ -28,10 +26,10 @@ public class Dashboard extends JFrame implements NavigationListener {
        this.username = username;
        this.userRole = userRole;
       
-       setTitle("ComFile - Dashboard");
-       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-       setSize(1000, 600);
-       setLocationRelativeTo(null);
+       //setTitle("ComFile - Dashboard");
+       //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+       //setSize(1000, 600);
+       //setLocationRelativeTo(null);
       
        // Initialize components
        navigationBar = new NavigationBar();
@@ -78,47 +76,12 @@ public class Dashboard extends JFrame implements NavigationListener {
 
        // Add click listener
        searchPanel.addMouseListener(new MouseAdapter() {
-           @Override
-           public void mouseClicked(MouseEvent e) {
-               // Close current window
-               dispose();
-              
-               SwingUtilities.invokeLater(() -> {
-                   JFrame frame = new JFrame("ComFile - My Documents");
-                   frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                   frame.setSize(1400, 900);
-                   frame.setLocationRelativeTo(null);
-              
-                   JPanel wrapper = new JPanel(new BorderLayout());
-                   NavigationBar navBar = new NavigationBar();
-                   navBar.setUserInfo(username, userRole);
-                   navBar.setNavigationListener(new NavigationBar.NavigationListener() {
-                       @Override public void onHomeClicked() {}
-                       @Override public void onDocumentsClicked() {}
-                       @Override public void onBackupClicked() {}
-                       @Override public void onNotificationClicked() {}
-                       @Override public void onLogoutClicked() {
-                           frame.dispose();
-                           new Login();
-                       }
-                   });
-              
-                   MyDocuments myDocs = new MyDocuments();
-                   wrapper.add(navBar, BorderLayout.NORTH);
-                   wrapper.add(myDocs, BorderLayout.CENTER);
-                  
-                   frame.setContentPane(wrapper);
-                   frame.setVisible(true);
-
-
-                   // ✅ Trigger resize agar filter tampil dengan benar
-                   SwingUtilities.invokeLater(() -> {
-                       myDocs.dispatchEvent(new ComponentEvent(myDocs, ComponentEvent.COMPONENT_RESIZED));
-                   });
-               });
-                           
-           }
-       });
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            MainApplication.getInstance().onDocumentsClicked();
+        }
+        });
+    
 
 
        // Add search panel directly to content panel
@@ -187,11 +150,31 @@ public class Dashboard extends JFrame implements NavigationListener {
 
 
        // SUGGESTED FILES TITLE
-       JLabel suggested = new JLabel("Suggested Files");
-       suggested.setFont(new Font("SansSerif", Font.BOLD, 20));
-       suggested.setAlignmentX(Component.LEFT_ALIGNMENT);
-       contentPanel.add(suggested);
-       contentPanel.add(Box.createVerticalStrut(16));
+       // Header with "See More" link
+        JPanel suggestedHeader = new JPanel(new BorderLayout());
+        suggestedHeader.setBackground(Color.WHITE);
+        suggestedHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+        suggestedHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+        JLabel suggestedTitle = new JLabel("Suggested Files");
+        suggestedTitle.setFont(new Font("SansSerif", Font.BOLD, 20));
+        suggestedHeader.add(suggestedTitle, BorderLayout.WEST);
+
+        JLabel seeMore = new JLabel("See More →");
+        seeMore.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        seeMore.setForeground(new Color(90, 106, 207));
+        seeMore.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        seeMore.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                MainApplication.getInstance().onDocumentsClicked(); // Redirect ke documents
+            }
+        });
+        suggestedHeader.add(seeMore, BorderLayout.EAST);
+
+        contentPanel.add(suggestedHeader);
+        contentPanel.add(Box.createVerticalStrut(16));
+
 
 
        // CUSTOM TABLE PANEL
@@ -209,8 +192,8 @@ public class Dashboard extends JFrame implements NavigationListener {
        String[] headers = {"File Name", "Last Activity", "Owner"};
        Object[][] data = {
                {"K3C_DPPLOO002", "You created • 5:00 PM", "me"},
-               {"K3C_SKPLOO", "You opened • 10 May", "user8593"},
-               {"K3C_FormAsistensi3", "user1221 edited • 6:02 AM", "me"}
+               {"K3C_SKPLOO", "You opened • 10 May", "michaelscott"},
+               {"K3C_FormAsistensi3", "lanasteiner edited • 6:02 AM", "me"}
        };
 
 
@@ -250,7 +233,7 @@ public class Dashboard extends JFrame implements NavigationListener {
 
        // Add components to frame
        setLayout(new BorderLayout());
-       add(navigationBar, BorderLayout.NORTH);
+       // add(navigationBar, BorderLayout.NORTH);
       
        // Wrap content panel in a scroll pane
        JScrollPane scrollPane = new JScrollPane(contentPanel);
@@ -308,46 +291,10 @@ public class Dashboard extends JFrame implements NavigationListener {
 
 
    @Override
-   public void onDocumentsClicked() {
-       this.dispose(); // Tutup halaman sekarang
+    public void onDocumentsClicked() {
+        MainApplication.getInstance().onDocumentsClicked();
+    }
 
-
-       // Buka halaman dokumen
-       SwingUtilities.invokeLater(() -> {
-           JFrame frame = new JFrame("ComFile - My Documents");
-           frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-           frame.setSize(1400, 900);
-           frame.setLocationRelativeTo(null);
-      
-           JPanel wrapper = new JPanel(new BorderLayout());
-           NavigationBar navBar = new NavigationBar();
-           navBar.setUserInfo(username, userRole);
-           navBar.setNavigationListener(new NavigationBar.NavigationListener() {
-               @Override public void onHomeClicked() {}
-               @Override public void onDocumentsClicked() {}
-               @Override public void onBackupClicked() {}
-               @Override public void onNotificationClicked() {}
-               @Override public void onLogoutClicked() {
-                   frame.dispose();
-                   new Login();
-               }
-           });
-      
-           MyDocuments myDocs = new MyDocuments();
-           wrapper.add(navBar, BorderLayout.NORTH);
-           wrapper.add(myDocs, BorderLayout.CENTER);
-                  
-           frame.setContentPane(wrapper);
-           frame.setVisible(true);
-
-
-                   // ✅ Trigger resize agar filter tampil dengan benar
-           SwingUtilities.invokeLater(() -> {
-               myDocs.dispatchEvent(new ComponentEvent(myDocs, ComponentEvent.COMPONENT_RESIZED));
-           });
-       });       
-      
-   }
 
 
 
@@ -368,23 +315,9 @@ public class Dashboard extends JFrame implements NavigationListener {
 
 
    @Override
-   public void onLogoutClicked() {
-       // Close current window
-       this.dispose();
-      
-       // Redirect to Login page
-       SwingUtilities.invokeLater(() -> {
-           new Login();
-       });
-   }
+    public void onLogoutClicked() {
+        MainApplication.getInstance().onLogoutClicked();
+    }
 
 
-   /*
-   public static void main(String[] args) {
-       // Run the GUI in the Event Dispatch Thread
-       SwingUtilities.invokeLater(() -> {
-           new Dashboard("oliviarhye", "Karyawan");
-       });
-   }
-   */
 }

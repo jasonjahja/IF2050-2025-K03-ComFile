@@ -11,17 +11,20 @@ import java.awt.event.*;
 import javax.swing.border.*;
 import java.sql.*;
 
-public class Login extends JFrame {
+public class Login extends JPanel {
     private final PlaceholderTextField usernameField;
     private final PlaceholderPasswordField passwordField;
+    // private final MainApplication app;
+    private final JFrame parentFrame;
 
-    public Login() {
-        setTitle("ComFile Login");
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(1080, 720);
-        setLocationRelativeTo(null);
+    public Login(JFrame parentFrame) {
+        this.parentFrame = parentFrame;
+        // setTitle("ComFile Login");
+        // setDefaultCloseOperation(EXIT_ON_CLOSE);
+        // setSize(1080, 720);
+        // setLocationRelativeTo(null);
+        // setLayout(new GridLayout(1, 2));
         setLayout(new GridLayout(1, 2));
-
         // === LEFT: Illustration ===
         JLabel imageLabel = new JLabel();
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -45,6 +48,8 @@ public class Login extends JFrame {
         // === RIGHT: Form Panel ===
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(Color.WHITE);
+        formPanel.setPreferredSize(null); // biar ikut tinggi parent
+        formPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         add(formPanel);
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -134,13 +139,10 @@ public class Login extends JFrame {
 
             String role = getUserRoleFromDatabase(username, password);
             if (role != null) {
-                JOptionPane.showMessageDialog(this, "Login berhasil sebagai " + role);
-                this.dispose();
-                if (role.equalsIgnoreCase("Admin")) {
-                    new AdminDashboard(username, role);
-                } else {
-                    new Dashboard(username, role);
-                }
+                //MainApplication.getInstance().onHomeClicked();
+                parentFrame.dispose(); // Tutup login
+                MainApplication.startWithUser(username, role); 
+                // MainApplication.getInstance().onHomeClicked();
             } else {
                 JOptionPane.showMessageDialog(this, "Username/password salah!");
             }
@@ -148,6 +150,11 @@ public class Login extends JFrame {
 
         setVisible(true);
     }
+
+    public Login() {
+        this(null); // panggil constructor utama dengan null (app tidak digunakan di sini)
+    }
+    
 
     private String getUserRoleFromDatabase(String username, String password) {
         try (Connection conn = DBConnection.connect()) {
