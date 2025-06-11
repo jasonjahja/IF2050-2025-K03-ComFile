@@ -1,7 +1,7 @@
 package pages;
 
 import pages.Dashboard.Dashboard;
-import pages.Admin.AdminDashboard;
+import main.MainApplication;
 import utils.DBConnection;
 
 import javax.swing.*;
@@ -135,11 +135,9 @@ public class Login extends JFrame {
             if (role != null) {
                 JOptionPane.showMessageDialog(this, "Login berhasil sebagai " + role);
                 this.dispose();
-                if (role.equalsIgnoreCase("Admin")) {
-                    new AdminDashboard(username, role);
-                } else {
-                    new Dashboard(username, role);
-                }
+                
+                // Use MainApplication for all users (including admins)
+                MainApplication.startWithUser(username, role);
             } else {
                 JOptionPane.showMessageDialog(this, "Username/password salah!");
             }
@@ -149,9 +147,6 @@ public class Login extends JFrame {
     }
 
     private String getUserRoleFromDatabase(String username, String password) {
-        // Initialize demo data if needed
-        utils.UserDAO.initializeDemoData();
-        
         try (Connection conn = DBConnection.connect()) {
             if (conn == null) return null;
             String query = "SELECT role FROM users WHERE username = ? AND password = ?";

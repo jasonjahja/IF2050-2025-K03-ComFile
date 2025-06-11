@@ -2,34 +2,40 @@ package pages.Admin;
 
 import components.NavigationBar;
 import utils.UserDAO;
+import utils.DocumentDAO;
+import pages.ManageDocuments.Document.Doc;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.awt.Desktop;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
-public class AdminDashboard extends JFrame implements NavigationBar.NavigationListener {
+public class AdminDashboard extends JPanel {
     private String username;
     private String userRole;
-    private NavigationBar navigationBar;
+    private JPanel contentPanel;
+    private java.awt.Container parentContainer;
+    private Color defaultBorderColor = new Color(200, 200, 200);
+    private Color hoverBorderColor = new Color(90, 106, 207);
 
-    public AdminDashboard(String username, String userRole) {
+    public AdminDashboard(String username, String userRole, java.awt.Container parentContainer) {
         this.username = username;
         this.userRole = userRole;
+        this.parentContainer = parentContainer;
         
-        setTitle("ComFile - Admin Dashboard");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1400, 900);
-        setLocationRelativeTo(null);
+        initializeComponents();
+    }
 
-        // Initialize components
-        navigationBar = new NavigationBar();
-        navigationBar.setNavigationListener(this);
-        navigationBar.setUserInfo(username, userRole);
+    private void initializeComponents() {
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
         
         // Create main content panel with padding
-        JPanel contentPanel = new JPanel();
+        contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
         contentPanel.setBackground(Color.WHITE);
@@ -98,21 +104,15 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
         contentPanel.add(documentsHeader);
         contentPanel.add(Box.createVerticalStrut(16));
         
-        // Documents table panel
-        JPanel documentsTablePanel = createDocumentsTablePanel();
-        contentPanel.add(documentsTablePanel);
-        
-        // Add components to frame
-        setLayout(new BorderLayout());
-        add(navigationBar, BorderLayout.NORTH);
+        // Documents grid panel
+        JPanel documentsGridPanel = createDocumentsGridPanel();
+        contentPanel.add(documentsGridPanel);
         
         // Wrap content panel in a scroll pane
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
-
-        setVisible(true);
     }
     
     private JPanel createUsersTablePanel() {
@@ -150,7 +150,7 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
         headerRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         
         // Define fixed column widths for consistent alignment
-        int[] columnWidths = {300, 120, 100, 130, 130, 80}; // Full Name, Status, Role, Username, Department, Actions
+        int[] columnWidths = {400, 150, 130, 160, 150, 100}; // Full Name, Status, Role, Username, Department, Actions
         
         for (int i = 0; i < headers.length; i++) {
             JPanel columnPanel = new JPanel(new BorderLayout());
@@ -246,89 +246,81 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
                     JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
                     actionsPanel.setBackground(Color.WHITE);
                     
+                    // Get the username for this row
+                    String rowUsername = row[3].toString();
+                    
                     // Load icons - BIN FIRST, then EDIT
                     try {
-                        String projectRoot = System.getProperty("user.dir");
+                        // Delete button with trash icon - only show if not current admin
+                        if (!rowUsername.equals(this.username)) {
+                            ImageIcon binOriginal = new ImageIcon("img/icon-bin.png");
+                            Image binScaled = binOriginal.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+                            ImageIcon binIcon = new ImageIcon(binScaled);
+                            JLabel deleteBtn = new JLabel(binIcon);
+                            deleteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                            deleteBtn.setToolTipText("Delete");
+                            deleteBtn.addMouseListener(new MouseAdapter() {
+                                @Override
+                                public void mouseClicked(MouseEvent e) {
+                                    showDeleteConfirmation(row[0].toString());
+                                }
+                                
+                                @Override
+                                public void mouseEntered(MouseEvent e) {
+                                    deleteBtn.setForeground(Color.RED);
+                                }
+                                
+                                @Override
+                                public void mouseExited(MouseEvent e) {
+                                    deleteBtn.setForeground(Color.BLACK);
+                                }
+                            });
+                            
+                            actionsPanel.add(deleteBtn);
+                        }
                         
-                        // Delete/Bin icon first
-                        ImageIcon binOriginal = new ImageIcon("img/icon-bin.png");
-                        Image binScaled = binOriginal.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
-                        ImageIcon binIcon = new ImageIcon(binScaled);
-                        JLabel deleteLabel = new JLabel(binIcon);
-                        deleteLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                        deleteLabel.setToolTipText("Delete");
-                        
-                        // Add click handler for delete
-                        final String currentRowUser = row[0].toString(); // Full name with username
-                        deleteLabel.addMouseListener(new MouseAdapter() {
-                            @Override
-                            public void mouseClicked(MouseEvent e) {
-                                AdminDashboard.this.showDeleteConfirmation(currentRowUser);
-                            }
-                        });
-                        
-                        // Edit icon second
+                        // Edit button with pencil icon  
                         ImageIcon editOriginal = new ImageIcon("img/icon-edit.png");
                         Image editScaled = editOriginal.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
                         ImageIcon editIcon = new ImageIcon(editScaled);
-                        JLabel editLabel = new JLabel(editIcon);
-                        editLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                        editLabel.setToolTipText("Edit");
-                        
-                        // Add click handler for edit
-                        editLabel.addMouseListener(new MouseAdapter() {
+                        JLabel editBtn = new JLabel(editIcon);
+                        editBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                        editBtn.setToolTipText("Edit");
+                        editBtn.addMouseListener(new MouseAdapter() {
                             @Override
                             public void mouseClicked(MouseEvent e) {
-                                AdminDashboard.this.openEditUserPage(currentRowUser);
+                                openEditUserPage(row[0].toString());
+                            }
+                            
+                            @Override
+                            public void mouseEntered(MouseEvent e) {
+                                editBtn.setForeground(new Color(90, 106, 207));
+                            }
+                            
+                            @Override
+                            public void mouseExited(MouseEvent e) {
+                                editBtn.setForeground(Color.BLACK);
                             }
                         });
                         
-                        actionsPanel.add(deleteLabel); // Bin first
-                        actionsPanel.add(editLabel);   // Edit second
+                        actionsPanel.add(editBtn);
                         
-                    } catch (Exception e) {
-                        // Fallback icons
-                        final String currentRowUser = row[0].toString(); // Full name with username
-                        
-                        JLabel deleteLabel = new JLabel("🗑");
-                        deleteLabel.setFont(new Font("SansSerif", Font.PLAIN, 32));
-                        deleteLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                        deleteLabel.setToolTipText("Delete");
-                        deleteLabel.addMouseListener(new MouseAdapter() {
-                            @Override
-                            public void mouseClicked(MouseEvent e) {
-                                AdminDashboard.this.showDeleteConfirmation(currentRowUser);
-                            }
-                        });
-                        
-                        JLabel editLabel = new JLabel("✎");
-                        editLabel.setFont(new Font("SansSerif", Font.PLAIN, 32));
-                        editLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                        editLabel.setToolTipText("Edit");
-                        editLabel.addMouseListener(new MouseAdapter() {
-                            @Override
-                            public void mouseClicked(MouseEvent e) {
-                                AdminDashboard.this.openEditUserPage(currentRowUser);
-                            }
-                        });
-                        
-                        actionsPanel.add(deleteLabel);
-                        actionsPanel.add(editLabel);
+                    } catch (Exception ex) {
+                        // Fallback to text if icons fail
+                        if (!rowUsername.equals(this.username)) {
+                            JLabel deleteBtn = new JLabel("Delete");
+                            deleteBtn.setForeground(Color.RED);
+                            deleteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                            actionsPanel.add(deleteBtn);
+                        }
                     }
                     
                     columnPanel.add(actionsPanel, BorderLayout.WEST);
                     
                 } else {
-                    // Regular columns with text truncation for long names
-                    String cellText = row[i].toString();
-                    if (i == 0 && cellText.length() > 35) { // Full Name column - truncate if too long
-                        cellText = cellText.substring(0, 32) + "...";
-                    }
-                    
-                    JLabel cellLabel = new JLabel(cellText);
+                    JLabel cellLabel = new JLabel(row[i].toString());
                     cellLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
                     cellLabel.setForeground(new Color(17, 24, 39));
-                    
                     columnPanel.add(cellLabel, BorderLayout.WEST);
                 }
                 
@@ -339,266 +331,313 @@ public class AdminDashboard extends JFrame implements NavigationBar.NavigationLi
                     rowPanel.add(Box.createHorizontalStrut(10));
                 }
             }
+            
             tablePanel.add(rowPanel);
         }
-
+        
         return tablePanel;
     }
     
-    private JPanel createDocumentsTablePanel() {
-        JPanel documentsContainer = new JPanel();
-        documentsContainer.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 20));
-        documentsContainer.setBackground(Color.WHITE);
-        documentsContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+    private JPanel createDocumentsGridPanel() {
+        JPanel documentsWrapper = new JPanel(new BorderLayout());
+        documentsWrapper.setBackground(Color.WHITE);
+        documentsWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        documentsWrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 280));
         
-        // Document data
-        String[][] documents = {
-                {"K3C_DPPLOO002", "15 May 2025"},
-                {"Document1", "13 May 2025"},
-                {"Document2", "10 May 2025"}
-        };
-
-        // Create document cards
-        for (String[] doc : documents) {
-            JPanel card = createDocumentCard(doc[0], doc[1]);
-            documentsContainer.add(card);
+        // Create grid with 5 columns for horizontal layout
+        JPanel documentsGrid = new JPanel(new GridLayout(1, 5, 15, 15));
+        documentsGrid.setBackground(Color.WHITE);
+        documentsGrid.setBorder(new EmptyBorder(10, 10, 10, 10));
+        
+        // Get recent documents from database (limit 5, ordered by modified_date DESC)
+        List<Doc> recentDocs = getRecentDocumentsFromDB(5);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+        
+        if (recentDocs.isEmpty()) {
+            JLabel emptyMsg = new JLabel("No documents found.");
+            emptyMsg.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            emptyMsg.setHorizontalAlignment(SwingConstants.CENTER);
+            documentsGrid.add(emptyMsg);
+        } else {
+            for (Doc doc : recentDocs) {
+                File file = new File(doc.filePath);
+                String date = file.exists() ? dateFormat.format(file.lastModified()) : dateFormat.format(doc.modifiedDate);
+                documentsGrid.add(createDocumentCard(doc, date));
+            }
         }
-
-        return documentsContainer;
+        
+        documentsWrapper.add(documentsGrid, BorderLayout.CENTER);
+        return documentsWrapper;
     }
-
-    private JPanel createDocumentCard(String title, String date) {
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(229, 231, 235), 1),
-            BorderFactory.createEmptyBorder(16, 16, 16, 16)
+    
+    private List<Doc> getRecentDocumentsFromDB(int limit) {
+        // Get all documents and sort by modified date, then limit
+        return DocumentDAO.getAllDocumentsFromDB()
+                .stream()
+                .sorted((d1, d2) -> d2.modifiedDate.compareTo(d1.modifiedDate))
+                .limit(limit)
+                .toList();
+    }
+    
+    private JPanel createDocumentCard(Doc doc, String dateText) {
+        JPanel docCard = new JPanel(new BorderLayout());
+        docCard.setPreferredSize(new Dimension(180, 240));
+        docCard.setBackground(Color.WHITE);
+        docCard.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(defaultBorderColor),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
-        card.setPreferredSize(new Dimension(200, 280));
-        card.setMaximumSize(new Dimension(200, 280));
 
-        // Document thumbnail
-        JPanel thumbnailPanel = new JPanel();
-        thumbnailPanel.setPreferredSize(new Dimension(168, 200));
-        thumbnailPanel.setMaximumSize(new Dimension(168, 200));
-        thumbnailPanel.setBackground(new Color(248, 250, 252));
-        thumbnailPanel.setBorder(BorderFactory.createLineBorder(new Color(229, 231, 235)));
-        thumbnailPanel.setLayout(new GridBagLayout());
-        
-        // Try to load doc-thumb.png, fallback to simple preview
+        // Load thumbnail
+        ImageIcon docImage = null;
         try {
-            String projectRoot = System.getProperty("user.dir");
-            String thumbPath = projectRoot + "/img/doc-thumb.png";
-            ImageIcon thumbIcon = new ImageIcon(thumbPath);
-            
-            // Scale the image to fit nicely in the thumbnail
-            Image thumbScaled = thumbIcon.getImage().getScaledInstance(120, 150, Image.SCALE_SMOOTH);
-            ImageIcon scaledIcon = new ImageIcon(thumbScaled);
-            JLabel thumbLabel = new JLabel(scaledIcon);
-            thumbnailPanel.add(thumbLabel);
-            
+            String path = System.getProperty("user.dir") + "/img/doc-thumb.png";
+            File imageFile = new File(path);
+            if (imageFile.exists()) {
+                docImage = new ImageIcon(imageFile.getAbsolutePath());
+            }
         } catch (Exception e) {
-            // Fallback: simple document preview
-            JLabel docIcon = new JLabel("📄");
-            docIcon.setFont(new Font("SansSerif", Font.PLAIN, 48));
-            docIcon.setHorizontalAlignment(JLabel.CENTER);
-            thumbnailPanel.add(docIcon);
+            e.printStackTrace();
         }
 
-        // Document title
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        titleLabel.setHorizontalAlignment(JLabel.CENTER);
+        JPanel imageContainer = new JPanel(new BorderLayout());
+        imageContainer.setBackground(Color.WHITE);
+        imageContainer.setPreferredSize(new Dimension(160, 160));
 
-        // Document date
-        JLabel dateLabel = new JLabel(date);
-        dateLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        dateLabel.setForeground(new Color(107, 114, 126));
-        dateLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        dateLabel.setHorizontalAlignment(JLabel.CENTER);
-
-        card.add(thumbnailPanel);
-        card.add(Box.createVerticalStrut(12));
-        card.add(titleLabel);
-        card.add(Box.createVerticalStrut(4));
-        card.add(dateLabel);
-
-        return card;
-    }
-
-    // NavigationListener implementation
-    @Override
-    public void onHomeClicked() {
-        System.out.println("Home clicked from Admin Dashboard");
+        if (docImage == null || docImage.getImageLoadStatus() == MediaTracker.ERRORED) {
+            JLabel docPlaceholder = new JLabel("📄");
+            docPlaceholder.setFont(new Font("Arial", Font.PLAIN, 48));
+            docPlaceholder.setHorizontalAlignment(SwingConstants.CENTER);
+            imageContainer.add(docPlaceholder, BorderLayout.CENTER);
+        } else {
+            Image scaledDoc = docImage.getImage().getScaledInstance(140, 140, Image.SCALE_SMOOTH);
+            JLabel docImageLabel = new JLabel(new ImageIcon(scaledDoc));
+            docImageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            imageContainer.add(docImageLabel, BorderLayout.CENTER);
         }
 
-        @Override
-    public void onDocumentsClicked() {
-        System.out.println("Documents clicked from Admin Dashboard");
-    }
+        imageContainer.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        docCard.add(imageContainer, BorderLayout.CENTER);
 
-    @Override
-    public void onBackupClicked() {
-        System.out.println("Backup clicked from Admin Dashboard");
-        }
+        // Info Panel (Title + Date)
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setBackground(Color.WHITE);
 
-        @Override
-    public void onNotificationClicked() {
-        JOptionPane.showMessageDialog(this, "Admin notifications", "Notifications", JOptionPane.INFORMATION_MESSAGE);
-        }
+        JLabel docTitle = new JLabel(doc.title);
+        docTitle.setFont(new Font("Arial", Font.BOLD, 12));
+        docTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        docTitle.setBorder(new EmptyBorder(5, 0, 2, 0));
 
-        @Override
-    public void onLogoutClicked() {
-        int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Confirm Logout", JOptionPane.YES_NO_OPTION);
-        if (result == JOptionPane.YES_OPTION) {
-            System.exit(0);
-        }
+        JLabel docDate = new JLabel(dateText);
+        docDate.setFont(new Font("Arial", Font.PLAIN, 10));
+        docDate.setForeground(new Color(100, 100, 100));
+        docDate.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        infoPanel.add(docTitle);
+        infoPanel.add(docDate);
+
+        docCard.add(infoPanel, BorderLayout.SOUTH);
+
+        // Hover Effect
+        docCard.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                docCard.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(hoverBorderColor, 2),
+                        BorderFactory.createEmptyBorder(9, 9, 9, 9)
+                ));
+                docCard.setBackground(new Color(250, 250, 255));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+            }
+
+            public void mouseExited(MouseEvent e) {
+                docCard.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(defaultBorderColor),
+                        BorderFactory.createEmptyBorder(10, 10, 10, 10)
+                ));
+                docCard.setBackground(Color.WHITE);
+                setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            }
+
+            public void mouseClicked(MouseEvent e) {
+                File file = new File(doc.filePath);
+                if (file.exists()) {
+                    try {
+                        Desktop.getDesktop().open(file);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(
+                                docCard,
+                                "Failed to open document: " + ex.getMessage(),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(
+                            docCard,
+                            "File not found at: " + file.getAbsolutePath(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+        });
+
+        return docCard;
     }
     
     private void openUserManagementPage() {
-        this.dispose();
-        SwingUtilities.invokeLater(() -> {
-            new UserManagementDashboard(username, userRole);
-        });
+        if (parentContainer instanceof JPanel) {
+            JPanel parent = (JPanel) parentContainer;
+            CardLayout cardLayout = (CardLayout) parent.getLayout();
+            
+            // Add or switch to user management page
+            boolean pageExists = false;
+            for (Component comp : parent.getComponents()) {
+                if (comp instanceof UserManagementDashboard) {
+                    pageExists = true;
+                    break;
+                }
+            }
+            
+            if (!pageExists) {
+                UserManagementDashboard userMgmt = new UserManagementDashboard(username, userRole, parentContainer);
+                parent.add(userMgmt, "USER_MANAGEMENT");
+            }
+            
+            cardLayout.show(parent, "USER_MANAGEMENT");
+        }
     }
-    
+
     private void openDocumentsPage() {
-        System.out.println("Opening Documents page...");
-        // TODO: Implement documents page navigation
+        // Navigate to documents section in main app
+        if (parentContainer instanceof JPanel) {
+            JPanel parent = (JPanel) parentContainer;
+            CardLayout cardLayout = (CardLayout) parent.getLayout();
+            cardLayout.show(parent, "DOCUMENTS");
+        }
     }
     
-        private void showDeleteConfirmation(String userName) {
-        JDialog dialog = new JDialog(this, "Confirm Delete", true);
-        dialog.setSize(480, 280);
+    private void showDeleteConfirmation(String userName) {
+        // Extract username from display format "Full Name (@username)"
+        String username = extractUsername(userName);
+        
+        // Check if admin is trying to delete their own account
+        if (username.equals(this.username)) {
+            JOptionPane.showMessageDialog(this, 
+                "You cannot delete your own account!", 
+                "Cannot Delete", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Create custom dialog
+        JDialog dialog = new JDialog();
+        dialog.setTitle("Delete User");
+        dialog.setModal(true);
+        dialog.setSize(400, 200);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout());
-        dialog.getContentPane().setBackground(Color.WHITE);
-        dialog.setUndecorated(true);
-        dialog.getRootPane().setBorder(BorderFactory.createLineBorder(new Color(229, 231, 235), 1));
         
-        // Header with close button
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(Color.WHITE);
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 24, 10, 20));
+        // Content panel
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel.setBackground(Color.WHITE);
         
-        JLabel titleLabel = new JLabel("Confirm Delete");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-        titleLabel.setForeground(new Color(17, 24, 39));
+        JLabel messageLabel = new JLabel("Are you sure you want to delete this user?");
+        messageLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        messageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel closeButton = new JLabel("✕");
-        closeButton.setFont(new Font("SansSerif", Font.PLAIN, 18));
-        closeButton.setForeground(new Color(107, 114, 126));
-        closeButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        closeButton.addMouseListener(new MouseAdapter() {
+        JLabel usernameLabel = new JLabel(userName);
+        usernameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        usernameLabel.setForeground(Color.GRAY);
+        usernameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        contentPanel.add(messageLabel);
+        contentPanel.add(Box.createVerticalStrut(10));
+        contentPanel.add(usernameLabel);
+        
+        // Buttons panel
+        JPanel buttonsPanel = new JPanel(new FlowLayout());
+        buttonsPanel.setBackground(Color.WHITE);
+        
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        cancelBtn.setForeground(new Color(107, 114, 126));
+        cancelBtn.setBackground(Color.WHITE);
+        cancelBtn.setOpaque(true);
+        cancelBtn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
+            BorderFactory.createEmptyBorder(8, 16, 8, 16)
+        ));
+        cancelBtn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 dialog.dispose();
             }
         });
         
-        headerPanel.add(titleLabel, BorderLayout.WEST);
-        headerPanel.add(closeButton, BorderLayout.EAST);
-        
-        // Content panel
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setBackground(Color.WHITE);
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 24, 30, 24));
-        
-        // Warning icon and text
-        JPanel warningPanel = new JPanel();
-        warningPanel.setLayout(new BoxLayout(warningPanel, BoxLayout.Y_AXIS));
-        warningPanel.setBackground(Color.WHITE);
-        warningPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel warningIcon = new JLabel("⚠", JLabel.CENTER);
-        warningIcon.setFont(new Font("SansSerif", Font.PLAIN, 48));
-        warningIcon.setForeground(new Color(245, 158, 11));
-        warningIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel warningText = new JLabel("Are you sure you want to", JLabel.CENTER);
-        warningText.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        warningText.setForeground(new Color(55, 65, 81));
-        warningText.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel warningText2 = new JLabel("delete this user?", JLabel.CENTER);
-        warningText2.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        warningText2.setForeground(new Color(55, 65, 81));
-        warningText2.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        warningPanel.add(warningIcon);
-        warningPanel.add(Box.createVerticalStrut(20));
-        warningPanel.add(warningText);
-        warningPanel.add(warningText2);
-        
-        contentPanel.add(warningPanel);
-        
-        // Buttons panel
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
-        buttonsPanel.setBackground(Color.WHITE);
-        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(25, 0, 0, 0));
-        
-        JButton cancelBtn = new JButton("Cancel");
-        cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        cancelBtn.setForeground(new Color(55, 65, 81));
-        cancelBtn.setBackground(Color.WHITE);
-        cancelBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
-            BorderFactory.createEmptyBorder(12, 24, 12, 24)
-        ));
-        cancelBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        cancelBtn.setPreferredSize(new Dimension(100, 45));
-        cancelBtn.addActionListener(e -> dialog.dispose());
-        
         JButton deleteBtn = new JButton("Delete");
         deleteBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
         deleteBtn.setForeground(Color.WHITE);
-        deleteBtn.setBackground(new Color(239, 68, 68));
-        deleteBtn.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
-        deleteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        deleteBtn.setPreferredSize(new Dimension(100, 45));
+        deleteBtn.setBackground(new Color(220, 38, 38)); // Solid red background
+        deleteBtn.setOpaque(true);
+        deleteBtn.setContentAreaFilled(true); // Ensure background is painted
+        deleteBtn.setBorderPainted(false); // Remove border
+        deleteBtn.setFocusPainted(false); // Remove focus border
+        deleteBtn.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         deleteBtn.addActionListener(e -> {
-            // Delete user from database using username
-            String usernameToDelete = extractUsername(userName);
-            if (UserDAO.deleteUser(usernameToDelete)) {
-                System.out.println("✅ User deleted successfully: " + userName);
-                JOptionPane.showMessageDialog(this, "User deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                // Refresh the users table
+            // Perform deletion
+            boolean success = UserDAO.deleteUser(username);
+            if (success) {
+                JOptionPane.showMessageDialog(dialog, "User deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                dialog.dispose();
+                // Refresh the dashboard
                 SwingUtilities.invokeLater(() -> {
-                    AdminDashboard.this.dispose();
-                    new AdminDashboard(AdminDashboard.this.username, AdminDashboard.this.userRole);
+                    removeAll();
+                    initializeComponents();
+                    revalidate();
+                    repaint();
                 });
             } else {
-                System.err.println("❌ Failed to delete user: " + userName);
-                JOptionPane.showMessageDialog(this, "Failed to delete user!", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Failed to delete user.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-            dialog.dispose();
         });
         
         buttonsPanel.add(cancelBtn);
         buttonsPanel.add(deleteBtn);
         
-        dialog.add(headerPanel, BorderLayout.NORTH);
         dialog.add(contentPanel, BorderLayout.CENTER);
         dialog.add(buttonsPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
     }
     
     private void openEditUserPage(String selectedUser) {
-        this.dispose();
-        SwingUtilities.invokeLater(() -> {
-            new EditUserPage(username, userRole, selectedUser);
-        });
+        if (parentContainer instanceof JPanel) {
+            JPanel parent = (JPanel) parentContainer;
+            CardLayout cardLayout = (CardLayout) parent.getLayout();
+            
+            // Remove existing edit user page if any
+            for (Component comp : parent.getComponents()) {
+                if (comp instanceof EditUserPage) {
+                    parent.remove(comp);
+                    break;
+                }
+            }
+            
+            EditUserPage editPage = new EditUserPage(username, userRole, selectedUser, parentContainer);
+            parent.add(editPage, "EDIT_USER");
+            cardLayout.show(parent, "EDIT_USER");
+        }
     }
     
     private String extractUsername(String fullUserName) {
-        // Extract username from "Full Name (@username)" format
-        if (fullUserName.contains("(@") && fullUserName.contains(")")) {
-            int start = fullUserName.indexOf("(@") + 2;
-            int end = fullUserName.indexOf(")", start);
-            return fullUserName.substring(start, end);
+        // Extract username from format "Full Name (@username)"
+        int startIndex = fullUserName.indexOf("(@") + 2;
+        int endIndex = fullUserName.indexOf(")", startIndex);
+        if (startIndex > 1 && endIndex > startIndex) {
+            return fullUserName.substring(startIndex, endIndex);
         }
         return fullUserName; // fallback
     }

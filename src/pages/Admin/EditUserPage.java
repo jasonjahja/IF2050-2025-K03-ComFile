@@ -7,11 +7,10 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class EditUserPage extends JFrame implements NavigationBar.NavigationListener {
+public class EditUserPage extends JPanel {
     private String username;
     private String userRole;
     private String selectedUser;
-    private NavigationBar navigationBar;
     private boolean passwordVisible = false;
     private JPasswordField passwordField;
     private JLabel eyeIcon;
@@ -24,30 +23,25 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
     private JPanel photoCircle;
     private java.io.File selectedPhotoFile;
     private String currentAvatarPath;
+    private java.awt.Container parentContainer;
 
-    public EditUserPage(String username, String userRole, String selectedUser) {
+    public EditUserPage(String username, String userRole, String selectedUser, java.awt.Container parentContainer) {
         this.username = username;
         this.userRole = userRole;
         this.selectedUser = selectedUser;
+        this.parentContainer = parentContainer;
         
         // Load user data from database
         String extractedUsername = extractUsername(selectedUser);
         this.currentUser = UserDAO.getUserByUsername(extractedUsername);
         this.currentAvatarPath = currentUser != null ? currentUser.avatarPath : null;
         
-        setTitle("ComFile - Edit User");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1400, 900);
-        setLocationRelativeTo(null);
-
         initializeComponents();
-        setVisible(true);
     }
 
     private void initializeComponents() {
-        navigationBar = new NavigationBar();
-        navigationBar.setNavigationListener(this);
-        navigationBar.setUserInfo(username, userRole);
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
 
         // Main content panel
         JPanel contentPanel = new JPanel();
@@ -88,10 +82,7 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         contentPanel.add(Box.createVerticalStrut(40));
         contentPanel.add(createButtonsPanel());
 
-        // Setup frame
-        setLayout(new BorderLayout());
-        add(navigationBar, BorderLayout.NORTH);
-        
+        // Wrap content panel in a scroll pane
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
@@ -401,6 +392,7 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 14));
         cancelBtn.setForeground(new Color(107, 114, 126));
         cancelBtn.setBackground(Color.WHITE);
+        cancelBtn.setOpaque(true);
         cancelBtn.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
             BorderFactory.createEmptyBorder(12, 24, 12, 24)
@@ -408,10 +400,14 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         cancelBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         cancelBtn.addActionListener(e -> goBackToUserManagement());
         
-        JButton updateBtn = new JButton("Update User");
+        JButton updateBtn = new JButton("Update");
         updateBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
         updateBtn.setForeground(Color.WHITE);
         updateBtn.setBackground(new Color(79, 109, 245));
+        updateBtn.setOpaque(true);
+        updateBtn.setContentAreaFilled(true);
+        updateBtn.setBorderPainted(false);
+        updateBtn.setFocusPainted(false);
         updateBtn.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
         updateBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         updateBtn.addActionListener(e -> updateUser());
@@ -458,13 +454,12 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
         }
     }
 
-
-
     private void goBackToUserManagement() {
-        this.dispose();
-        SwingUtilities.invokeLater(() -> {
-            new UserManagementDashboard(username, userRole);
-        });
+        if (parentContainer instanceof JPanel) {
+            JPanel parent = (JPanel) parentContainer;
+            CardLayout cardLayout = (CardLayout) parent.getLayout();
+            cardLayout.show(parent, "USER_MANAGEMENT");
+        }
     }
 
     private void updateUser() {
@@ -510,44 +505,12 @@ public class EditUserPage extends JFrame implements NavigationBar.NavigationList
     }
     
     private String extractUsername(String fullUserName) {
-        // Extract username from "Full Name (@username)" format
-        if (fullUserName.contains("(@") && fullUserName.contains(")")) {
-            int start = fullUserName.indexOf("(@") + 2;
-            int end = fullUserName.indexOf(")", start);
-            return fullUserName.substring(start, end);
+        // Extract username from format "Full Name (@username)"
+        int startIndex = fullUserName.indexOf("(@") + 2;
+        int endIndex = fullUserName.indexOf(")", startIndex);
+        if (startIndex > 1 && endIndex > startIndex) {
+            return fullUserName.substring(startIndex, endIndex);
         }
         return fullUserName; // fallback
-    }
-
-    // NavigationListener implementation
-    @Override
-    public void onHomeClicked() {
-        this.dispose();
-        SwingUtilities.invokeLater(() -> {
-            new AdminDashboard(username, userRole);
-        });
-    }
-
-    @Override
-    public void onDocumentsClicked() {
-        System.out.println("Documents clicked");
-    }
-
-    @Override
-    public void onBackupClicked() {
-        System.out.println("Backup clicked");
-    }
-
-    @Override
-    public void onNotificationClicked() {
-        JOptionPane.showMessageDialog(this, "Edit User notifications", "Notifications", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    @Override
-    public void onLogoutClicked() {
-        int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Confirm Logout", JOptionPane.YES_NO_OPTION);
-        if (result == JOptionPane.YES_OPTION) {
-            System.exit(0);
-        }
     }
 } 
