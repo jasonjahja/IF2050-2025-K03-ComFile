@@ -1,198 +1,186 @@
 package main;
 
 import components.NavigationBar;
-// import java.awt.event.ComponentEvent;
 import pages.ManageDocuments.MyDocuments;
-import pages.Admin.AdminDashboard;
-import pages.Admin.UserManagementDashboard;
-import pages.Admin.AddUserPage;
-import pages.Admin.EditUserPage;
 import pages.Login;
+import pages.Dashboard.Dashboard;
+import pages.Admin.AdminDashboard;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class MainApplication extends JFrame implements NavigationBar.NavigationListener {
-    private NavigationBar navigationBar;
-    private JPanel contentPanel;
-    private CardLayout cardLayout;
-    private MyDocuments documentsPage;
-    private String currentUsername;
-    private String currentUserRole;
+ private NavigationBar navigationBar;
+ private JPanel contentPanel;
+ private CardLayout cardLayout;
+ private MyDocuments documentsPage;
 
-    private static MainApplication instance;
 
-    public MainApplication(String username, String role) {
-        instance = this;
-        this.currentUsername = username;
-        this.currentUserRole = role;
-        initializeApplication();
-        createPages(username, role);
-        setupLayout();
-        setVisible(true);
-    }
+ private static MainApplication instance;
 
-    private void initializeApplication() {
-        setTitle("ComFile - Document Management System");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1400, 900);
-        setLocationRelativeTo(null);
 
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+ public MainApplication(String username, String role) {
+     instance = this;
+     initializeApplication();
+     createPages(username, role);
+     setupLayout();
+     setVisible(true);
+ }
 
-        navigationBar = new NavigationBar();
-        navigationBar.setNavigationListener(this);
 
-        cardLayout = new CardLayout();
-        contentPanel = new JPanel(cardLayout);
-    }
+ private void initializeApplication() {
+     setTitle("ComFile - Document Management System");
+     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+     setSize(1400, 900);
+     setLocationRelativeTo(null);
 
-    private void createPages(String username, String role) {
-        // Set user info di navigation bar
-        navigationBar.setUserInfo(username, role);
 
-        // Standard pages for all users
-        JPanel homePage;
-        if ("Admin".equals(role)) {
-            // Admin gets admin dashboard as home page
-            homePage = new AdminDashboard(username, role, contentPanel);
-        } else {
-            // Regular users get standard home page
-            homePage = createPlaceholderPage("Home Page", "Welcome to the Document Management System");
-        }
-        
-        documentsPage = new MyDocuments(); // Document management page
-        JPanel backupPage = createPlaceholderPage("Backup Page", "Backup and restore your documents");
+     try {
+         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+     } catch (Exception e) {
+         e.printStackTrace();
+     }
 
-        contentPanel.add(homePage, "HOME");
-        contentPanel.add(documentsPage, "DOCUMENTS");
-        contentPanel.add(backupPage, "BACKUP");
 
-        // Add admin-specific pages if user is admin
-        if ("Admin".equals(role)) {
-            // Add admin pages - they will be dynamically added when needed
-            // This allows for clean navigation between admin features
-        }
+     navigationBar = new NavigationBar();
+     navigationBar.setNavigationListener(this);
 
-        cardLayout.show(contentPanel, "HOME");
-    }
+     cardLayout = new CardLayout();
+     contentPanel = new JPanel(cardLayout);
+ }
 
-    private JPanel createPlaceholderPage(String title, String description) {
-        JPanel page = new JPanel(new BorderLayout());
-        page.setBackground(new Color(248, 249, 250));
+ private void createPages(String username, String role) {
+  navigationBar.setUserInfo(username, role);
 
-        JPanel centerPanel = new JPanel(new GridBagLayout());
-        centerPanel.setBackground(new Color(248, 249, 250));
+  java.awt.Container parentContainer = contentPanel;
 
-        JPanel contentBox = new JPanel();
-        contentBox.setLayout(new BoxLayout(contentBox, BoxLayout.Y_AXIS));
-        contentBox.setBackground(Color.WHITE);
-        contentBox.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                BorderFactory.createEmptyBorder(50, 50, 50, 50)
-        ));
 
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+  if (role.equalsIgnoreCase("Admin")) {
+      AdminDashboard adminDashboard = new AdminDashboard(username, role, parentContainer);
+      contentPanel.add(adminDashboard, "ADMIN_DASHBOARD");
+      cardLayout.show(contentPanel, "ADMIN_DASHBOARD");
+  } else {
+      Dashboard dashboard = new Dashboard(username, role);
+      contentPanel.add(dashboard, "HOME");
+      cardLayout.show(contentPanel, "HOME");
+  }
 
-        JLabel descLabel = new JLabel(description);
-        descLabel.setFont(new Font("Arial", Font.PLAIN, 16));
-        descLabel.setForeground(Color.GRAY);
-        descLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+  JPanel documentsPage = new MyDocuments();
+  JPanel backupPage = createPlaceholderPage("Backup Page", "Backup and restore your documents");
 
-        contentBox.add(titleLabel);
-        contentBox.add(Box.createVerticalStrut(10));
-        contentBox.add(descLabel);
+  contentPanel.add(documentsPage, "DOCUMENTS");
+  contentPanel.add(backupPage, "BACKUP");
+   
+  }
 
-        centerPanel.add(contentBox);
-        page.add(centerPanel, BorderLayout.CENTER);
 
-        return page;
-    }
+ private JPanel createPlaceholderPage(String title, String description) {
+     JPanel page = new JPanel(new BorderLayout());
+     page.setBackground(new Color(248, 249, 250));
 
-    private void setupLayout() {
-        setLayout(new BorderLayout());
-        add(navigationBar, BorderLayout.NORTH);
-        add(contentPanel, BorderLayout.CENTER);
-    }
 
-    // ========== Public method to switch to admin pages ==========
-    public void showAdminPage(String pageName) {
-        if (!"Admin".equals(currentUserRole)) {
-            JOptionPane.showMessageDialog(this, "Access denied. Admin privileges required.", "Access Denied", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        
-        cardLayout.show(contentPanel, pageName);
-    }
+     JPanel centerPanel = new JPanel(new GridBagLayout());
+     centerPanel.setBackground(new Color(248, 249, 250));
 
-    // ========== Navigation Listener ==========
 
-    @Override
-    public void onHomeClicked() {
-        cardLayout.show(contentPanel, "HOME");
-    }
+     JPanel contentBox = new JPanel();
+     contentBox.setLayout(new BoxLayout(contentBox, BoxLayout.Y_AXIS));
+     contentBox.setBackground(Color.WHITE);
+     contentBox.setBorder(BorderFactory.createCompoundBorder(
+             BorderFactory.createLineBorder(new Color(220, 220, 220)),
+             BorderFactory.createEmptyBorder(50, 50, 50, 50)
+     ));
 
-    @Override
-    public void onDocumentsClicked() {
-        if (documentsPage != null) {
-            documentsPage.refreshDocuments();
-        }
-        cardLayout.show(contentPanel, "DOCUMENTS");
-    }
+     JLabel titleLabel = new JLabel(title);
+     titleLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+     titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-    @Override
-    public void onBackupClicked() {
-        cardLayout.show(contentPanel, "BACKUP");
-    }
+     JLabel descLabel = new JLabel(description);
+     descLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
+     descLabel.setForeground(Color.GRAY);
+     descLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-    @Override
-    public void onNotificationClicked() {
-        JOptionPane.showMessageDialog(this,
-                "You have 3 new notifications",
-                "Notifications",
-                JOptionPane.INFORMATION_MESSAGE);
-    }
+     contentBox.add(titleLabel);
+     contentBox.add(Box.createVerticalStrut(10));
+     contentBox.add(descLabel);
 
-    @Override
-    public void onLogoutClicked() {
-        int result = JOptionPane.showConfirmDialog(this,
-                "Are you sure you want to logout?",
-                "Confirm Logout",
-                JOptionPane.YES_NO_OPTION);
+     centerPanel.add(contentBox);
+     page.add(centerPanel, BorderLayout.CENTER);
 
-        if (result == JOptionPane.YES_OPTION) {
-            dispose(); // Tutup window utama
-            new Login(); // Tampilkan login lagi
-        }
-    }
+     return page;
+ }
 
-    // ========== Untuk dipanggil setelah login ==========
-    public static void startWithUser(String username, String role) {
-        SwingUtilities.invokeLater(() -> new MainApplication(username, role));
-    }
+ private void setupLayout() {
+     setLayout(new BorderLayout());
+     add(navigationBar, BorderLayout.NORTH);
+     add(contentPanel, BorderLayout.CENTER);
+ }
 
-    // ========== Get instance for admin navigation ==========
-    public static MainApplication getInstance() {
-        return instance;
-    }
+ // ========== Navigation Listener ==========
 
-    // ========== Public access to contentPanel and cardLayout for admin pages ==========
-    public JPanel getContentPanel() {
-        return contentPanel;
-    }
-    
-    public CardLayout getCardLayout() {
-        return cardLayout;
-    }
+ @Override
+ public void onHomeClicked() {
+     cardLayout.show(contentPanel, "HOME");
+ }
 
-    // ========== Main Awal: Login page ==========
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Login());
-    }
+
+ @Override
+ public void onDocumentsClicked() {
+     if (documentsPage != null) {
+         documentsPage.refreshDocuments();
+     }
+     cardLayout.show(contentPanel, "DOCUMENTS");
+ }
+
+ @Override
+ public void onBackupClicked() {
+
+  }
+
+
+ @Override
+ public void onNotificationClicked() {
+   
+ }
+
+
+ @Override
+ public void onLogoutClicked() {
+     int result = JOptionPane.showConfirmDialog(this,
+             "Are you sure you want to logout?",
+             "Confirm Logout",
+             JOptionPane.YES_NO_OPTION);
+
+     if (result == JOptionPane.YES_OPTION) {
+         dispose();
+         JFrame frame = new JFrame("ComFile Login");
+         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+         frame.setSize(1080, 720);
+         frame.setLocationRelativeTo(null);
+         frame.setContentPane(new Login(null));
+         frame.setVisible(true);
+         }
+ }
+
+ public static void startWithUser(String username, String role) {
+     SwingUtilities.invokeLater(() -> new MainApplication(username, role));
+ }
+
+ // ========== Main Awal: Login page ==========
+ public static void main(String[] args) {
+     SwingUtilities.invokeLater(() -> {
+         JFrame frame = new JFrame("ComFile Login");
+         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+         frame.setSize(1080, 720);
+         frame.setLocationRelativeTo(null);
+         frame.setContentPane(new Login(frame));
+         frame.setVisible(true);
+     });
+ }
+
+
+ public static MainApplication getInstance() {
+     return instance;
+ }
 }
+
