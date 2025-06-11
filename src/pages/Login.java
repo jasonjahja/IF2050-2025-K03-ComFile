@@ -2,7 +2,7 @@ package pages;
 
 import main.MainApplication;
 import pages.Dashboard.Dashboard;
-import pages.AdminDashboard;
+import pages.Admin.AdminDashboard;
 import utils.DBConnection;
 
 import javax.swing.*;
@@ -12,202 +12,199 @@ import javax.swing.border.*;
 import java.sql.*;
 
 public class Login extends JPanel {
-    private final PlaceholderTextField usernameField;
-    private final PlaceholderPasswordField passwordField;
-    // private final MainApplication app;
-    private final JFrame parentFrame;
+  private final PlaceholderTextField usernameField;
+  private final PlaceholderPasswordField passwordField;
+  private final JFrame parentFrame;
 
-    public Login(JFrame parentFrame) {
-        this.parentFrame = parentFrame;
-        // setTitle("ComFile Login");
-        // setDefaultCloseOperation(EXIT_ON_CLOSE);
-        // setSize(1080, 720);
-        // setLocationRelativeTo(null);
-        // setLayout(new GridLayout(1, 2));
-        setLayout(new GridLayout(1, 2));
-        // === LEFT: Illustration ===
-        JLabel imageLabel = new JLabel();
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
-        imageLabel.setOpaque(true);
-        imageLabel.setBackground(Color.WHITE);
-        add(imageLabel);
 
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                Dimension size = getSize();
-                int imgWidth = size.width / 2;
-                int imgHeight = size.height;
-                ImageIcon rawIcon = new ImageIcon("img/login-image.png");
-                Image scaled = rawIcon.getImage().getScaledInstance(imgWidth, imgHeight, Image.SCALE_SMOOTH);
-                imageLabel.setIcon(new ImageIcon(scaled));
-            }
-        });
+  public Login(JFrame parentFrame) {
+      this.parentFrame = parentFrame;
 
-        // === RIGHT: Form Panel ===
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(Color.WHITE);
-        formPanel.setPreferredSize(null); // biar ikut tinggi parent
-        formPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-        add(formPanel);
+      setLayout(new GridLayout(1, 2));
+      // === LEFT: Illustration ===
+      JLabel imageLabel = new JLabel();
+      imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+      imageLabel.setVerticalAlignment(SwingConstants.CENTER);
+      imageLabel.setOpaque(true);
+      imageLabel.setBackground(Color.WHITE);
+      add(imageLabel);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 0, 10, 0);
-        gbc.gridx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+      addComponentListener(new ComponentAdapter() {
+          @Override
+          public void componentResized(ComponentEvent e) {
+              Dimension size = getSize();
+              int imgWidth = size.width / 2;
+              int imgHeight = size.height;
+              ImageIcon rawIcon = new ImageIcon("img/login-image.png");
+              Image scaled = rawIcon.getImage().getScaledInstance(imgWidth, imgHeight, Image.SCALE_SMOOTH);
+              imageLabel.setIcon(new ImageIcon(scaled));
+          }
+      });
 
-        JPanel contentWrapper = new JPanel(null);
-        contentWrapper.setPreferredSize(new Dimension(520, 600));
-        contentWrapper.setBackground(Color.WHITE);
 
-        ImageIcon logoIcon = new ImageIcon("img/logo.png");
-        Image logoImg = logoIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
-        JLabel logo = new JLabel(new ImageIcon(logoImg));
-        logo.setBounds(60, 10, 40, 40);
-        contentWrapper.add(logo);
+      // === RIGHT: Form Panel ===
+      JPanel formPanel = new JPanel(new GridBagLayout());
+      formPanel.setBackground(Color.WHITE);
+      formPanel.setPreferredSize(null); // biar ikut tinggi parent
+      formPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+      add(formPanel);
 
-        JLabel welcome = new JLabel("Welcome Back!");
-        welcome.setFont(new Font("SansSerif", Font.BOLD, 24));
-        welcome.setBounds(60, 130, 400, 40);
-        welcome.setHorizontalAlignment(SwingConstants.CENTER);
-        contentWrapper.add(welcome);
+      GridBagConstraints gbc = new GridBagConstraints();
+      gbc.insets = new Insets(10, 0, 10, 0);
+      gbc.gridx = 0;
+      gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel usernameLabel = new JLabel("Username");
-        usernameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        usernameLabel.setBounds(60, 220, 400, 20);
-        contentWrapper.add(usernameLabel);
+      JPanel contentWrapper = new JPanel(null);
+      contentWrapper.setPreferredSize(new Dimension(520, 600));
+      contentWrapper.setBackground(Color.WHITE);
 
-        usernameField = new PlaceholderTextField("oliviarhye");
-        usernameField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        usernameField.setBounds(60, 245, 400, 44);
-        contentWrapper.add(usernameField);
+      ImageIcon logoIcon = new ImageIcon("img/logo.png");
+      Image logoImg = logoIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
+      JLabel logo = new JLabel(new ImageIcon(logoImg));
+      logo.setBounds(60, 10, 40, 40);
+      contentWrapper.add(logo);
 
-        JLabel passwordLabel = new JLabel("Password");
-        passwordLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        passwordLabel.setBounds(60, 330, 400, 20);
-        contentWrapper.add(passwordLabel);
+      JLabel welcome = new JLabel("Welcome Back!");
+      welcome.setFont(new Font("SansSerif", Font.BOLD, 24));
+      welcome.setBounds(60, 130, 400, 40);
+      welcome.setHorizontalAlignment(SwingConstants.CENTER);
+      contentWrapper.add(welcome);
 
-        JPanel passwordWrapper = new JPanel(new BorderLayout());
-        passwordWrapper.setBounds(60, 355, 400, 44);
-        passwordWrapper.setBackground(Color.WHITE);
-        passwordWrapper.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+      JLabel usernameLabel = new JLabel("Username");
+      usernameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+      usernameLabel.setBounds(60, 220, 400, 20);
+      contentWrapper.add(usernameLabel);
 
-        passwordField = new PlaceholderPasswordField("Enter your password");
-        passwordField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        passwordField.setBorder(new EmptyBorder(10, 10, 10, 10));
-        passwordWrapper.add(passwordField, BorderLayout.CENTER);
+      usernameField = new PlaceholderTextField("oliviarhye");
+      usernameField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+      usernameField.setBounds(60, 245, 400, 44);
+      contentWrapper.add(usernameField);
 
-        ImageIcon eyeIcon = new ImageIcon(new ImageIcon("img/eye.png").getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH));
-        ImageIcon eyeSlashIcon = new ImageIcon(new ImageIcon("img/eye-slash.png").getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH));
+      JLabel passwordLabel = new JLabel("Password");
+      passwordLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+      passwordLabel.setBounds(60, 330, 400, 20);
+      contentWrapper.add(passwordLabel);
 
-        JLabel eyeToggle = new JLabel(eyeIcon);
-        eyeToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        eyeToggle.setHorizontalAlignment(SwingConstants.CENTER);
-        eyeToggle.setPreferredSize(new Dimension(40, 44));
-        passwordWrapper.add(eyeToggle, BorderLayout.EAST);
-        contentWrapper.add(passwordWrapper);
+      JPanel passwordWrapper = new JPanel(new BorderLayout());
+      passwordWrapper.setBounds(60, 355, 400, 44);
+      passwordWrapper.setBackground(Color.WHITE);
+      passwordWrapper.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
 
-        eyeToggle.addMouseListener(new MouseAdapter() {
-            private boolean isVisible = false;
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                isVisible = !isVisible;
-                passwordField.setEchoChar(isVisible ? (char) 0 : '\u2022');
-                eyeToggle.setIcon(isVisible ? eyeSlashIcon : eyeIcon);
-            }
-        });
+      passwordField = new PlaceholderPasswordField("Enter your password");
+      passwordField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+      passwordField.setBorder(new EmptyBorder(10, 10, 10, 10));
+      passwordWrapper.add(passwordField, BorderLayout.CENTER);
 
-        JButton loginButton = new JButton("Login");
-        loginButton.setBounds(60, 445, 400, 44);
-        loginButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        loginButton.setBackground(Color.decode("#5A6ACF"));
-        loginButton.setForeground(Color.WHITE);
-        loginButton.setFocusPainted(false);
+      ImageIcon eyeIcon = new ImageIcon(new ImageIcon("img/eye.png").getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH));
+      ImageIcon eyeSlashIcon = new ImageIcon(new ImageIcon("img/eye-slash.png").getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH));
 
-        loginButton.setOpaque(true);
-        loginButton.setBorderPainted(false);
-        
-        contentWrapper.add(loginButton);
+      JLabel eyeToggle = new JLabel(eyeIcon);
+      eyeToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+      eyeToggle.setHorizontalAlignment(SwingConstants.CENTER);
+      eyeToggle.setPreferredSize(new Dimension(40, 44));
+      passwordWrapper.add(eyeToggle, BorderLayout.EAST);
+      contentWrapper.add(passwordWrapper);
 
-        gbc.gridy = 0;
-        formPanel.add(contentWrapper, gbc);
+      eyeToggle.addMouseListener(new MouseAdapter() {
+          private boolean isVisible = false;
+          @Override
+          public void mouseClicked(MouseEvent e) {
+              isVisible = !isVisible;
+              passwordField.setEchoChar(isVisible ? (char) 0 : '\u2022');
+              eyeToggle.setIcon(isVisible ? eyeSlashIcon : eyeIcon);
+          }
+      });
 
-        loginButton.addActionListener(e -> {
-            String username = usernameField.getText().trim();
-            String password = new String(passwordField.getPassword()).trim();
+      JButton loginButton = new JButton("Login");
+      loginButton.setBounds(60, 445, 400, 44);
+      loginButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+      loginButton.setBackground(Color.decode("#5A6ACF"));
+      loginButton.setForeground(Color.WHITE);
+      loginButton.setFocusPainted(false);
 
-            String role = getUserRoleFromDatabase(username, password);
-            if (role != null) {
-                //MainApplication.getInstance().onHomeClicked();
-                parentFrame.dispose(); // Tutup login
-                MainApplication.startWithUser(username, role); 
-                // MainApplication.getInstance().onHomeClicked();
-            } else {
-                JOptionPane.showMessageDialog(this, "Username/password salah!");
-            }
-        });
-
-        setVisible(true);
-    }
-
-    public Login() {
-        this(null); // panggil constructor utama dengan null (app tidak digunakan di sini)
-    }
+      loginButton.setOpaque(true);
+      loginButton.setBorderPainted(false);
     
+      contentWrapper.add(loginButton);
 
-    private String getUserRoleFromDatabase(String username, String password) {
-        try (Connection conn = DBConnection.connect()) {
-            if (conn == null) return null;
-            String query = "SELECT role FROM users WHERE username = ? AND password = ?";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, username);
-            stmt.setString(2, password);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("role");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+      gbc.gridy = 0;
+      formPanel.add(contentWrapper, gbc);
 
-    private static class PlaceholderTextField extends JTextField {
-        private final String placeholder;
-        public PlaceholderTextField(String placeholder) {
-            this.placeholder = placeholder;
-        }
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            if (getText().isEmpty() && !isFocusOwner()) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setColor(Color.GRAY);
-                g2.setFont(getFont().deriveFont(Font.PLAIN));
-                Insets insets = getInsets();
-                g2.drawString(placeholder, insets.left + 5, getHeight() / 2 + getFont().getSize() / 2 - 4);
-                g2.dispose();
-            }
-        }
-    }
+      loginButton.addActionListener(e -> {
+          String username = usernameField.getText().trim();
+          String password = new String(passwordField.getPassword()).trim();
 
-    private static class PlaceholderPasswordField extends JPasswordField {
-        private final String placeholder;
-        public PlaceholderPasswordField(String placeholder) {
-            this.placeholder = placeholder;
-        }
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            if (getPassword().length == 0 && !isFocusOwner()) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setColor(Color.GRAY);
-                g2.setFont(getFont().deriveFont(Font.PLAIN));
-                Insets insets = getInsets();
-                g2.drawString(placeholder, insets.left + 5, getHeight() / 2 + getFont().getSize() / 2 - 4);
-                g2.dispose();
-            }
-        }
-    }
+          String role = getUserRoleFromDatabase(username, password);
+          if (role != null) {
+              parentFrame.dispose();
+              new MainApplication(username, role);
+          } else {
+              JOptionPane.showMessageDialog(this, "Username/password salah!");
+          }
+      });
+
+      setVisible(true);
+  }
+
+
+  public Login() {
+      this(null);
+  }
+
+  private String getUserRoleFromDatabase(String username, String password) {
+      try (Connection conn = DBConnection.connect()) {
+          if (conn == null) return null;
+          String query = "SELECT role FROM users WHERE username = ? AND password = ?";
+          PreparedStatement stmt = conn.prepareStatement(query);
+          stmt.setString(1, username);
+          stmt.setString(2, password);
+          ResultSet rs = stmt.executeQuery();
+          if (rs.next()) {
+              return rs.getString("role");
+          }
+      } catch (Exception e) {
+          e.printStackTrace();
+      }
+      return null;
+  }
+
+  private static class PlaceholderTextField extends JTextField {
+      private final String placeholder;
+      public PlaceholderTextField(String placeholder) {
+          this.placeholder = placeholder;
+      }
+      @Override
+      protected void paintComponent(Graphics g) {
+          super.paintComponent(g);
+          if (getText().isEmpty() && !isFocusOwner()) {
+              Graphics2D g2 = (Graphics2D) g.create();
+              g2.setColor(Color.GRAY);
+              g2.setFont(getFont().deriveFont(Font.PLAIN));
+              Insets insets = getInsets();
+              g2.drawString(placeholder, insets.left + 5, getHeight() / 2 + getFont().getSize() / 2 - 4);
+              g2.dispose();
+          }
+      }
+  }
+
+
+  private static class PlaceholderPasswordField extends JPasswordField {
+      private final String placeholder;
+      public PlaceholderPasswordField(String placeholder) {
+          this.placeholder = placeholder;
+      }
+      @Override
+      protected void paintComponent(Graphics g) {
+          super.paintComponent(g);
+          if (getPassword().length == 0 && !isFocusOwner()) {
+              Graphics2D g2 = (Graphics2D) g.create();
+              g2.setColor(Color.GRAY);
+              g2.setFont(getFont().deriveFont(Font.PLAIN));
+              Insets insets = getInsets();
+              g2.drawString(placeholder, insets.left + 5, getHeight() / 2 + getFont().getSize() / 2 - 4);
+              g2.dispose();
+          }
+      }
+  }
 }
+
