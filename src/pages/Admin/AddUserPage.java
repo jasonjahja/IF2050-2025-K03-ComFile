@@ -7,10 +7,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class AddUserPage extends JFrame implements NavigationBar.NavigationListener {
+public class AddUserPage extends JPanel {
     private String username;
     private String userRole;
-    private NavigationBar navigationBar;
     private JLabel photoLabel;
     private JTextField fullNameField;
     private JTextField usernameField;
@@ -21,25 +20,19 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
     private JPanel photoCircle;
     private java.io.File selectedPhotoFile;
     private String currentAvatarPath;
+    private java.awt.Container parentContainer;
 
-    public AddUserPage(String username, String userRole) {
+    public AddUserPage(String username, String userRole, java.awt.Container parentContainer) {
         this.username = username;
         this.userRole = userRole;
-        
-        setTitle("ComFile - Add New User");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1400, 900);
-        setLocationRelativeTo(null);
+        this.parentContainer = parentContainer;
         
         initializeComponents();
-        setVisible(true);
     }
     
     private void initializeComponents() {
-        // Navigation Bar
-        navigationBar = new NavigationBar();
-        navigationBar.setNavigationListener(this);
-        navigationBar.setUserInfo(username, userRole);
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
         
         // Main content panel
         JPanel contentPanel = new JPanel();
@@ -74,10 +67,7 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
         contentPanel.add(Box.createVerticalStrut(40));
         contentPanel.add(createButtonsPanel());
         
-        // Setup frame
-        setLayout(new BorderLayout());
-        add(navigationBar, BorderLayout.NORTH);
-        
+        // Wrap content panel in a scroll pane
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
@@ -264,6 +254,7 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
         fieldPanel.setLayout(new BoxLayout(fieldPanel, BoxLayout.Y_AXIS));
         fieldPanel.setBackground(Color.WHITE);
         fieldPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        fieldPanel.setMaximumSize(new Dimension(380, 80));
         
         JLabel label = new JLabel(labelText);
         label.setFont(new Font("SansSerif", Font.BOLD, 16));
@@ -272,11 +263,10 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
         comboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
         comboBox.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+            BorderFactory.createEmptyBorder(12, 16, 12, 16)
         ));
         comboBox.setMaximumSize(new Dimension(380, 45));
         comboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        comboBox.setBackground(Color.WHITE);
         
         fieldPanel.add(label);
         fieldPanel.add(Box.createVerticalStrut(8));
@@ -295,6 +285,7 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
         cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 14));
         cancelBtn.setForeground(new Color(107, 114, 126));
         cancelBtn.setBackground(Color.WHITE);
+        cancelBtn.setOpaque(true);
         cancelBtn.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
             BorderFactory.createEmptyBorder(12, 24, 12, 24)
@@ -306,6 +297,10 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
         createBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
         createBtn.setForeground(Color.WHITE);
         createBtn.setBackground(new Color(79, 109, 245));
+        createBtn.setOpaque(true);
+        createBtn.setContentAreaFilled(true);
+        createBtn.setBorderPainted(false);
+        createBtn.setFocusPainted(false);
         createBtn.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
         createBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         createBtn.addActionListener(e -> createUser());
@@ -326,106 +321,64 @@ public class AddUserPage extends JFrame implements NavigationBar.NavigationListe
             
             @Override
             public String getDescription() {
-                return "Image Files (*.jpg, *.jpeg, *.png, *.gif)";
+                return "Image files (*.jpg, *.jpeg, *.png, *.gif)";
             }
         });
         
         int result = fileChooser.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             selectedPhotoFile = fileChooser.getSelectedFile();
-            
-            // Create temporary path for preview (we'll save it properly when creating the user)
             currentAvatarPath = selectedPhotoFile.getAbsolutePath();
-            
-            // Refresh the photo circle to show the new image
             photoCircle.repaint();
-            
-            System.out.println("Photo selected: " + selectedPhotoFile.getName());
         }
     }
     
     private void createUser() {
+        // Get form data
         String fullName = fullNameField.getText().trim();
         String username = usernameField.getText().trim();
-        String password = new String(passwordField.getPassword()).trim();
+        String password = new String(passwordField.getPassword());
         String role = (String) roleCombo.getSelectedItem();
         String department = (String) departmentCombo.getSelectedItem();
         String status = (String) statusCombo.getSelectedItem();
         
-        // Validation
+        // Validate required fields
         if (fullName.isEmpty() || username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please fill in all required fields!", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please fill in all required fields.", "Validation Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         
-        // Check if username already exists
-        if (UserDAO.usernameExists(username)) {
-            JOptionPane.showMessageDialog(this, "Username already exists! Please choose a different username.", "Username Exists", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        
-        // Handle profile picture
-        String avatarPath = null;
-        if (selectedPhotoFile != null) {
-            avatarPath = UserDAO.saveProfilePicture(selectedPhotoFile, username);
-            if (avatarPath == null) {
-                JOptionPane.showMessageDialog(this, "Failed to save profile picture, but user will be created without it.", "Warning", JOptionPane.WARNING_MESSAGE);
+        // Save to database
+        try {
+            boolean success = UserDAO.addUser(fullName, username, password, role, department, status, currentAvatarPath);
+            if (success) {
+                JOptionPane.showMessageDialog(this, "User created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                // Clear form
+                fullNameField.setText("");
+                usernameField.setText("");
+                passwordField.setText("");
+                roleCombo.setSelectedIndex(0);
+                departmentCombo.setSelectedIndex(0);
+                statusCombo.setSelectedIndex(0);
+                selectedPhotoFile = null;
+                currentAvatarPath = null;
+                photoCircle.repaint();
+                
+                // Go back to user management
+                goBackToUserManagement();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to create user. Username might already exist.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-        }
-        
-        // Add user to database with avatar
-        boolean success = UserDAO.addUser(fullName, username, password, role, department, status, avatarPath);
-        
-        if (success) {
-            System.out.println("✅ User created successfully: " + fullName + " (" + username + ")");
-            JOptionPane.showMessageDialog(this, "User created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            goBackToUserManagement();
-        } else {
-            System.err.println("❌ Failed to create user: " + fullName);
-            // Clean up saved avatar if user creation failed
-            if (avatarPath != null) {
-                UserDAO.deleteProfilePicture(avatarPath);
-            }
-            JOptionPane.showMessageDialog(this, "Failed to create user! Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error creating user: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
     
     private void goBackToUserManagement() {
-        this.dispose();
-        SwingUtilities.invokeLater(() -> {
-            new UserManagementDashboard(username, userRole);
-        });
-    }
-
-    // NavigationListener implementation
-    @Override
-    public void onHomeClicked() {
-        this.dispose();
-        SwingUtilities.invokeLater(() -> {
-            new AdminDashboard(username, userRole);
-        });
-    }
-
-    @Override
-    public void onDocumentsClicked() {
-        System.out.println("Documents clicked");
-    }
-
-    @Override
-    public void onBackupClicked() {
-        System.out.println("Backup clicked");
-    }
-
-    @Override
-    public void onNotificationClicked() {
-        JOptionPane.showMessageDialog(this, "Add User notifications", "Notifications", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    @Override
-    public void onLogoutClicked() {
-        int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Confirm Logout", JOptionPane.YES_NO_OPTION);
-        if (result == JOptionPane.YES_OPTION) {
-            System.exit(0);
+        if (parentContainer instanceof JPanel) {
+            JPanel parent = (JPanel) parentContainer;
+            CardLayout cardLayout = (CardLayout) parent.getLayout();
+            cardLayout.show(parent, "USER_MANAGEMENT");
         }
     }
 } 

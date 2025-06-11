@@ -8,31 +8,24 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-public class UserManagementDashboard extends JFrame implements NavigationBar.NavigationListener {
+public class UserManagementDashboard extends JPanel {
     private String username;
     private String userRole;
-    private NavigationBar navigationBar;
     private JPanel tableContainer;
     private JPanel usersTableContainer;
+    private java.awt.Container parentContainer;
 
-    public UserManagementDashboard(String username, String userRole) {
+    public UserManagementDashboard(String username, String userRole, java.awt.Container parentContainer) {
         this.username = username;
         this.userRole = userRole;
-        
-        setTitle("ComFile - User Management");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1400, 900);
-        setLocationRelativeTo(null);
+        this.parentContainer = parentContainer;
         
         initializeComponents();
-        setVisible(true);
     }
     
     private void initializeComponents() {
-        // Navigation Bar
-        navigationBar = new NavigationBar();
-        navigationBar.setNavigationListener(this);
-        navigationBar.setUserInfo(username, userRole);
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
         
         // Main content panel
         JPanel contentPanel = new JPanel();
@@ -65,10 +58,7 @@ public class UserManagementDashboard extends JFrame implements NavigationBar.Nav
         createUsersTable();
         contentPanel.add(usersTableContainer);
         
-        // Setup frame
-        setLayout(new BorderLayout());
-        add(navigationBar, BorderLayout.NORTH);
-        
+        // Wrap content panel in a scroll pane
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
@@ -80,6 +70,10 @@ public class UserManagementDashboard extends JFrame implements NavigationBar.Nav
         addUserBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
         addUserBtn.setForeground(Color.WHITE);
         addUserBtn.setBackground(new Color(79, 109, 245));
+        addUserBtn.setOpaque(true);
+        addUserBtn.setContentAreaFilled(true); // Ensure background is painted
+        addUserBtn.setBorderPainted(false); // Remove border
+        addUserBtn.setFocusPainted(false); // Remove focus border
         addUserBtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         addUserBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         addUserBtn.addActionListener(e -> openAddUserPage());
@@ -110,7 +104,7 @@ public class UserManagementDashboard extends JFrame implements NavigationBar.Nav
     
     private JPanel createTableHeader() {
         String[] headers = {"Full Name", "Status", "Role", "Username", "Department", ""};
-        int[] columnWidths = {300, 120, 100, 130, 130, 80};
+        int[] columnWidths = {400, 150, 130, 160, 150, 100};
         
         JPanel headerRow = new JPanel();
         headerRow.setLayout(new BoxLayout(headerRow, BoxLayout.X_AXIS));
@@ -143,7 +137,7 @@ public class UserManagementDashboard extends JFrame implements NavigationBar.Nav
     }
     
     private JPanel createTableRow(Object[] row) {
-        int[] columnWidths = {300, 120, 100, 130, 130, 80};
+        int[] columnWidths = {400, 150, 130, 160, 150, 100};
         
         JPanel rowPanel = new JPanel();
         rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
@@ -246,33 +240,42 @@ public class UserManagementDashboard extends JFrame implements NavigationBar.Nav
         JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actionsPanel.setBackground(Color.WHITE);
         
-        // Delete button
-        JLabel deleteBtn = new JLabel();
-        try {
-            ImageIcon binIcon = new ImageIcon("img/icon-bin.png");
-            Image binScaled = binIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
-            deleteBtn.setIcon(new ImageIcon(binScaled));
-        } catch (Exception e) {
-            deleteBtn.setText("🗑");
+        // Extract username to check if it's current admin
+        String rowUsername = extractUsername(userName);
+        
+        // Delete button - only show if not current admin
+        if (!rowUsername.equals(this.username)) {
+            ImageIcon binOriginal = new ImageIcon("img/icon-bin.png");
+            Image binScaled = binOriginal.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+            ImageIcon binIcon = new ImageIcon(binScaled);
+            JLabel deleteBtn = new JLabel(binIcon);
+            deleteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            deleteBtn.setToolTipText("Delete");
+            deleteBtn.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    showDeleteConfirmation(userName);
+                }
+                
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    deleteBtn.setForeground(Color.RED);
+                }
+                
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    deleteBtn.setForeground(Color.BLACK);
+                }
+            });
+            
+            actionsPanel.add(deleteBtn);
         }
-        deleteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        deleteBtn.setToolTipText("Delete");
-        deleteBtn.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                showDeleteConfirmation(userName);
-            }
-        });
         
         // Edit button
-        JLabel editBtn = new JLabel();
-        try {
-            ImageIcon editIcon = new ImageIcon("img/icon-edit.png");
-            Image editScaled = editIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
-            editBtn.setIcon(new ImageIcon(editScaled));
-        } catch (Exception e) {
-            editBtn.setText("✎");
-        }
+        ImageIcon editOriginal = new ImageIcon("img/icon-edit.png");
+        Image editScaled = editOriginal.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+        ImageIcon editIcon = new ImageIcon(editScaled);
+        JLabel editBtn = new JLabel(editIcon);
         editBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         editBtn.setToolTipText("Edit");
         editBtn.addMouseListener(new MouseAdapter() {
@@ -280,201 +283,174 @@ public class UserManagementDashboard extends JFrame implements NavigationBar.Nav
             public void mouseClicked(MouseEvent e) {
                 openEditUserPage(userName);
             }
+            
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                editBtn.setForeground(new Color(90, 106, 207));
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent e) {
+                editBtn.setForeground(Color.BLACK);
+            }
         });
         
-        actionsPanel.add(deleteBtn);
         actionsPanel.add(editBtn);
+        
         return actionsPanel;
     }
     
     private Object[][] getUserData() {
-        // Get all users from database (no pagination)
-        List<UserDAO.User> dbUsers = UserDAO.getAllUsers();
+        List<UserDAO.User> users = UserDAO.getAllUsers();
+        Object[][] userData = new Object[users.size()][5];
         
-        Object[][] pageData = new Object[dbUsers.size()][5];
-        
-        for (int i = 0; i < dbUsers.size(); i++) {
-            UserDAO.User user = dbUsers.get(i);
-            pageData[i][0] = user.fullName + " (@" + user.username + ")";
-            pageData[i][1] = "● " + user.status;
-            pageData[i][2] = user.role;
-            pageData[i][3] = user.username;
-            pageData[i][4] = user.department;
+        for (int i = 0; i < users.size(); i++) {
+            UserDAO.User user = users.get(i);
+            userData[i][0] = user.fullName + " (@" + user.username + ")";
+            userData[i][1] = user.status;
+            userData[i][2] = user.role;
+            userData[i][3] = user.username;
+            userData[i][4] = user.department;
         }
         
-        return pageData;
+        return userData;
     }
     
-
-    
     private void showDeleteConfirmation(String userName) {
-        JDialog dialog = new JDialog(this, "Confirm Delete", true);
-        dialog.setSize(480, 280);
+        // Extract username from display format "Full Name (@username)"
+        String username = extractUsername(userName);
+        
+        // Check if admin is trying to delete their own account
+        if (username.equals(this.username)) {
+            JOptionPane.showMessageDialog(this, 
+                "You cannot delete your own account!", 
+                "Cannot Delete", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Create custom dialog
+        JDialog dialog = new JDialog();
+        dialog.setTitle("Delete User");
+        dialog.setModal(true);
+        dialog.setSize(400, 200);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout());
-        dialog.getContentPane().setBackground(Color.WHITE);
-        dialog.setUndecorated(true);
-        dialog.getRootPane().setBorder(BorderFactory.createLineBorder(new Color(229, 231, 235), 1));
         
-        // Header with close button
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(Color.WHITE);
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 24, 10, 20));
+        // Content panel
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel.setBackground(Color.WHITE);
         
-        JLabel titleLabel = new JLabel("Confirm Delete");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-        titleLabel.setForeground(new Color(17, 24, 39));
+        JLabel messageLabel = new JLabel("Are you sure you want to delete this user?");
+        messageLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        messageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel closeButton = new JLabel("✕");
-        closeButton.setFont(new Font("SansSerif", Font.PLAIN, 18));
-        closeButton.setForeground(new Color(107, 114, 126));
-        closeButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        closeButton.addMouseListener(new MouseAdapter() {
+        JLabel usernameLabel = new JLabel(userName);
+        usernameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        usernameLabel.setForeground(Color.GRAY);
+        usernameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        contentPanel.add(messageLabel);
+        contentPanel.add(Box.createVerticalStrut(10));
+        contentPanel.add(usernameLabel);
+        
+        // Buttons panel
+        JPanel buttonsPanel = new JPanel(new FlowLayout());
+        buttonsPanel.setBackground(Color.WHITE);
+        
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        cancelBtn.setForeground(new Color(107, 114, 126));
+        cancelBtn.setBackground(Color.WHITE);
+        cancelBtn.setOpaque(true);
+        cancelBtn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
+            BorderFactory.createEmptyBorder(8, 16, 8, 16)
+        ));
+        cancelBtn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 dialog.dispose();
             }
         });
         
-        headerPanel.add(titleLabel, BorderLayout.WEST);
-        headerPanel.add(closeButton, BorderLayout.EAST);
-        
-        // Content panel
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setBackground(Color.WHITE);
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 24, 30, 24));
-        
-        // Warning icon and text
-        JPanel warningPanel = new JPanel();
-        warningPanel.setLayout(new BoxLayout(warningPanel, BoxLayout.Y_AXIS));
-        warningPanel.setBackground(Color.WHITE);
-        warningPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel warningIcon = new JLabel("⚠", JLabel.CENTER);
-        warningIcon.setFont(new Font("SansSerif", Font.PLAIN, 48));
-        warningIcon.setForeground(new Color(245, 158, 11));
-        warningIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel warningText = new JLabel("Are you sure you want to", JLabel.CENTER);
-        warningText.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        warningText.setForeground(new Color(55, 65, 81));
-        warningText.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel warningText2 = new JLabel("delete this user?", JLabel.CENTER);
-        warningText2.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        warningText2.setForeground(new Color(55, 65, 81));
-        warningText2.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        warningPanel.add(warningIcon);
-        warningPanel.add(Box.createVerticalStrut(20));
-        warningPanel.add(warningText);
-        warningPanel.add(warningText2);
-        
-        contentPanel.add(warningPanel);
-        
-        // Buttons panel
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
-        buttonsPanel.setBackground(Color.WHITE);
-        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(25, 0, 0, 0));
-        
-        JButton cancelBtn = new JButton("Cancel");
-        cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        cancelBtn.setForeground(new Color(55, 65, 81));
-        cancelBtn.setBackground(Color.WHITE);
-        cancelBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(209, 213, 219), 1),
-            BorderFactory.createEmptyBorder(12, 24, 12, 24)
-        ));
-        cancelBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        cancelBtn.setPreferredSize(new Dimension(100, 45));
-        cancelBtn.addActionListener(e -> dialog.dispose());
-        
         JButton deleteBtn = new JButton("Delete");
         deleteBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
         deleteBtn.setForeground(Color.WHITE);
-        deleteBtn.setBackground(new Color(239, 68, 68));
-        deleteBtn.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
-        deleteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        deleteBtn.setPreferredSize(new Dimension(100, 45));
+        deleteBtn.setBackground(new Color(220, 38, 38)); // Solid red background
+        deleteBtn.setOpaque(true);
+        deleteBtn.setContentAreaFilled(true); // Ensure background is painted
+        deleteBtn.setBorderPainted(false); // Remove border
+        deleteBtn.setFocusPainted(false); // Remove focus border
+        deleteBtn.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         deleteBtn.addActionListener(e -> {
-            // Delete user from database using username
-            String usernameToDelete = extractUsername(userName);
-            if (UserDAO.deleteUser(usernameToDelete)) {
-                System.out.println("✅ User deleted successfully: " + userName);
-                JOptionPane.showMessageDialog(this, "User deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            // Perform deletion
+            boolean success = UserDAO.deleteUser(username);
+            if (success) {
+                JOptionPane.showMessageDialog(dialog, "User deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                dialog.dispose();
+                // Refresh the user table
+                createUsersTable();
             } else {
-                System.err.println("❌ Failed to delete user: " + userName);
-                JOptionPane.showMessageDialog(this, "Failed to delete user!", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Failed to delete user.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-            dialog.dispose();
-            createUsersTable();
         });
         
         buttonsPanel.add(cancelBtn);
         buttonsPanel.add(deleteBtn);
         
-        dialog.add(headerPanel, BorderLayout.NORTH);
         dialog.add(contentPanel, BorderLayout.CENTER);
         dialog.add(buttonsPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
     }
     
     private void openAddUserPage() {
-        this.dispose();
-        SwingUtilities.invokeLater(() -> {
-            new AddUserPage(username, userRole);
-        });
+        if (parentContainer instanceof JPanel) {
+            JPanel parent = (JPanel) parentContainer;
+            CardLayout cardLayout = (CardLayout) parent.getLayout();
+            
+            // Remove existing add user page if any
+            for (Component comp : parent.getComponents()) {
+                if (comp instanceof AddUserPage) {
+                    parent.remove(comp);
+                    break;
+                }
+            }
+            
+            AddUserPage addPage = new AddUserPage(username, userRole, parentContainer);
+            parent.add(addPage, "ADD_USER");
+            cardLayout.show(parent, "ADD_USER");
+        }
     }
     
     private void openEditUserPage(String selectedUser) {
-        this.dispose();
-        SwingUtilities.invokeLater(() -> {
-            new EditUserPage(username, userRole, selectedUser);
-        });
+        if (parentContainer instanceof JPanel) {
+            JPanel parent = (JPanel) parentContainer;
+            CardLayout cardLayout = (CardLayout) parent.getLayout();
+            
+            // Remove existing edit user page if any
+            for (Component comp : parent.getComponents()) {
+                if (comp instanceof EditUserPage) {
+                    parent.remove(comp);
+                    break;
+                }
+            }
+            
+            EditUserPage editPage = new EditUserPage(username, userRole, selectedUser, parentContainer);
+            parent.add(editPage, "EDIT_USER");
+            cardLayout.show(parent, "EDIT_USER");
+        }
     }
-    
-
     
     private String extractUsername(String fullUserName) {
-        // Extract username from "Full Name (@username)" format
-        if (fullUserName.contains("(@") && fullUserName.contains(")")) {
-            int start = fullUserName.indexOf("(@") + 2;
-            int end = fullUserName.indexOf(")", start);
-            return fullUserName.substring(start, end);
+        // Extract username from format "Full Name (@username)"
+        int startIndex = fullUserName.indexOf("(@") + 2;
+        int endIndex = fullUserName.indexOf(")", startIndex);
+        if (startIndex > 1 && endIndex > startIndex) {
+            return fullUserName.substring(startIndex, endIndex);
         }
         return fullUserName; // fallback
-    }
-
-    // NavigationListener implementation
-    @Override
-    public void onHomeClicked() {
-        this.dispose();
-        SwingUtilities.invokeLater(() -> {
-            new AdminDashboard(username, userRole);
-        });
-    }
-
-    @Override
-    public void onDocumentsClicked() {
-        System.out.println("Documents clicked");
-    }
-
-    @Override
-    public void onBackupClicked() {
-        System.out.println("Backup clicked");
-    }
-
-    @Override
-    public void onNotificationClicked() {
-        JOptionPane.showMessageDialog(this, "User Management notifications", "Notifications", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    @Override
-    public void onLogoutClicked() {
-        int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Confirm Logout", JOptionPane.YES_NO_OPTION);
-        if (result == JOptionPane.YES_OPTION) {
-            System.exit(0);
-        }
     }
 } 
