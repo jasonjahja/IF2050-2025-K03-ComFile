@@ -1,6 +1,12 @@
 package pages.ManageDocuments;
 
+import utils.DBConnection;
+import utils.DocumentDAO;
+
 import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.*;
 
 public class Document {
@@ -10,11 +16,38 @@ public class Document {
         public String id;
         public String name;
         public String role;
+        public String department;
 
+        @Deprecated
         public User(String id, String name, String role) {
+            this(id, name, role, "");
+        }
+
+        public User(String id, String name, String role, String department) {
             this.id = id;
             this.name = name;
             this.role = role;
+            this.department = department;
+        }
+
+        public String getUsername() {
+            return id;
+        }
+
+        public String getRole() {
+            return role;
+        }
+
+        public String getFullName() {
+            return name;
+        }
+
+        public String getDepartment() {
+            return department;
+        }
+
+        public static User getUser(String username) {
+            return users.get(username);
         }
     }
 
@@ -50,6 +83,7 @@ public class Document {
         public String filePath;
 
         public List<AccessPermission> sharedWith = new ArrayList<>();
+        public List<AccessPermission> accessPermissions = new ArrayList<>();
         public String generalAccessGroup = "";
         public String generalAccessRole = "";
 
@@ -77,7 +111,7 @@ public class Document {
         prepareUsers();
         currentUser = users.get("phoenixbaker"); // login user
 
-        User michael = users.get("michaelscott");
+        User owner = currentUser;
 
         // Path dokumen lokal
         String basePath = "/Users/audrazelvania/Downloads/";
@@ -99,38 +133,32 @@ public class Document {
                 fileType = filenames[i].substring(dotIndex + 1).toUpperCase();
             }
 
-            Doc doc = new Doc(
-                    "doc" + String.format("%03d", i + 1),
-                    filenames[i].substring(0, dotIndex),
-                    "This is a placeholder content for testing.",
-                    michael,
-                    modified, modified, modified,
+            Document.Doc newDoc = new Document.Doc(
+                    UUID.randomUUID().toString(),
+                    file.getName(),
+                    "Uploaded via UI",
+                    Document.currentUser,
+                    new Date(), new Date(), new Date(),
                     (i + 1) * 10,
                     fileType,
                     size,
                     file.getAbsolutePath()
             );
 
-            documentList.add(doc);
+            newDoc.generalAccessGroup = "Restricted";
+            newDoc.generalAccessRole = null;
+
+            documentList.add(newDoc);
+            //users.clear();
+            //users.putAll(DocumentDAO.loadAllUsers());
         }
     }
 
     public static void prepareUsers() {
-        userPasswords.put("lanasteiner", "lana123");     userRoles.put("lanasteiner", "Manajer");
-        userPasswords.put("candicewu", "candice123");     userRoles.put("candicewu", "Manajer");
-        userPasswords.put("michaelscott", "michael123");  userRoles.put("michaelscott", "Manajer");
-        userPasswords.put("andreawatson", "andrea123");   userRoles.put("andreawatson", "Manajer");
-        userPasswords.put("jonathanchoi", "jonathan123"); userRoles.put("jonathanchoi", "Manajer");
-        userPasswords.put("oliviarhye", "olivia123");     userRoles.put("oliviarhye", "Karyawan");
-        userPasswords.put("phoenixbaker", "phoenix123");  userRoles.put("phoenixbaker", "Karyawan");
-        userPasswords.put("drewcano", "drew123");          userRoles.put("drewcano", "Karyawan");
-        userPasswords.put("saraperez", "sara123");         userRoles.put("saraperez", "Karyawan");
-        userPasswords.put("kevindarma", "kevin123");       userRoles.put("kevindarma", "Karyawan");
+        users.clear();
+        users.putAll(DocumentDAO.loadAllUsers());
 
-        for (String username : userPasswords.keySet()) {
-            String role = userRoles.get(username);
-            users.put(username, new User(username, username, role));
-        }
+        currentUser = users.get("phoenixbaker");
     }
 
     public static boolean validateLogin(String username, String password) {
@@ -150,18 +178,34 @@ public class Document {
 
     public static boolean hasAccess(Doc doc, User user) {
         if (doc.owner.id.equals(user.id)) return true;
+
         for (AccessPermission ap : doc.sharedWith) {
             if (ap.user.id.equals(user.id)) return true;
         }
-        if (user.role.equals(doc.generalAccessGroup)) {
-            return doc.generalAccessRole.equals("Viewer") || doc.generalAccessRole.equals("Editor");
+
+        for (AccessPermission ap : doc.accessPermissions) {
+            if (ap.user.id.equals(user.id)) return true;
         }
+
+        // Tambahan: akses berdasarkan department
+        if (doc.generalAccessGroup != null && doc.generalAccessRole != null) {
+            String userRole = user.role != null ? user.role.trim().toLowerCase() : "";
+            String userDept = user.department != null ? user.department.trim().toLowerCase() : "";
+            String group = doc.generalAccessGroup.trim().toLowerCase();
+
+            String accessRole = doc.generalAccessRole != null ? doc.generalAccessRole.trim().toLowerCase() : "";
+            if (group.equals(userRole) || group.equals(userDept)) {
+                return accessRole.equals("viewer") || accessRole.equals("editor");
+            }
+        }
+        System.out.println("User: " + user.id + " | Role: " + user.role + " | Dept: " + user.department);
+        System.out.println("Doc: " + doc.title + " | Group: " + doc.generalAccessGroup + " | Role: " + doc.generalAccessRole);
         return false;
     }
 
     public static boolean canEdit(Doc doc, User user) {
         if (doc.owner.id.equals(user.id)) return true;
-        for (AccessPermission ap : doc.sharedWith) {
+        for (AccessPermission ap : doc.accessPermissions) {
             if (ap.user.id.equals(user.id) && ap.permission.equals("Editor")) return true;
         }
         return user.role.equals(doc.generalAccessGroup) && doc.generalAccessRole.equals("Editor");

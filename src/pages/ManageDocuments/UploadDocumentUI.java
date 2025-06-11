@@ -3,16 +3,20 @@ package pages.ManageDocuments;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import storage.DocumentStorage;
+import utils.DocumentDAO;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.net.URL;
+import java.util.Date;
+import java.util.UUID;
 
 public class UploadDocumentUI extends JDialog {
 
     public UploadDocumentUI(JFrame parent, Runnable onUploadComplete) {
-        super(parent, "Upload Document", true); // Make it modal
-        setUndecorated(true); // <-- hilangkan title bar dan window control
+        super(parent, "Upload Document", true);
+        setUndecorated(true);
         setSize(800, 600);
         setLocationRelativeTo(parent);
         getContentPane().setBackground(Color.WHITE);
@@ -150,11 +154,44 @@ public class UploadDocumentUI extends JDialog {
                 }
 
                 if (DocumentStorage.storeDocument(selectedFile)) {
+                    // ===== Logika simpan ke DB =====
+                    String fileName = selectedFile.getName();
+                    String title = fileName.contains(".")
+                            ? fileName.substring(0, fileName.lastIndexOf("."))
+                            : fileName;
+
+                    String fileType = fileName.contains(".")
+                            ? fileName.substring(fileName.lastIndexOf(".") + 1).toUpperCase()
+                            : "";
+
+                    int fileSizeKB = (int) (selectedFile.length() / 1024);
+                    java.util.Date now = new java.util.Date();
+
+                    Document.Doc newDoc = new Document.Doc(
+                            UUID.randomUUID().toString(),
+                            selectedFile.getName(),
+                            "Uploaded via UI",
+                            Document.currentUser,
+                            new Date(), new Date(), new Date(),
+                            1, // dummy page
+                            fileType,
+                            (int)(selectedFile.length() / 1024),
+                            selectedFile.getAbsolutePath()
+                    );
+
+                    newDoc.generalAccessGroup = "Restricted";
+                    newDoc.generalAccessRole = null;
+
+                    Document.documentList.add(newDoc);
+                    DocumentDAO.saveDocToDatabase(newDoc);
+                    // ==========================================
+
                     if (onUploadComplete != null) {
                         onUploadComplete.run();
                     }
                     dispose();
-                } else {
+                }
+                else {
                     JOptionPane.showMessageDialog(
                             UploadDocumentUI.this,
                             "Failed to store the file",
