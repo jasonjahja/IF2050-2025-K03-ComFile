@@ -399,6 +399,7 @@ public class MyDocuments extends JPanel {
         JPanel docCard = new JPanel(new BorderLayout());
         docCard.setPreferredSize(new Dimension(200, 280));
         docCard.setBackground(Color.WHITE);
+        docCard.putClientProperty("docId", doc.id);
         docCard.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(defaultBorderColor),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
@@ -791,6 +792,20 @@ public class MyDocuments extends JPanel {
             }
         };
         worker.execute();
+    }
+
+    public void removeDocumentCard(String docId) {
+        for (Component comp : documentsGrid.getComponents()) {
+            if (comp instanceof JPanel panel) {
+                Object tag = panel.getClientProperty("docId");
+                if (tag != null && tag.equals(docId)) {
+                    documentsGrid.remove(panel);
+                    documentsGrid.revalidate();
+                    documentsGrid.repaint();
+                    return;
+                }
+            }
+        }
     }
 
     private void loadDocumentsFromList(List<Doc> docs) {

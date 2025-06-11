@@ -2,8 +2,7 @@ package pages;
 
 import main.MainApplication;
 import pages.Dashboard.Dashboard;
-import pages.AdminDashboard;
-import pages.ManageDocuments.Document;
+import pages.Admin.AdminDashboard;
 import utils.DBConnection;
 
 import javax.swing.*;
@@ -12,17 +11,16 @@ import java.awt.event.*;
 import javax.swing.border.*;
 import java.sql.*;
 
-public class Login extends JFrame {
+public class Login extends JPanel {
     private final PlaceholderTextField usernameField;
     private final PlaceholderPasswordField passwordField;
+    private final JFrame parentFrame;
 
-    public Login() {
-        setTitle("ComFile Login");
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(1080, 720);
-        setLocationRelativeTo(null);
+
+    public Login(JFrame parentFrame) {
+        this.parentFrame = parentFrame;
+
         setLayout(new GridLayout(1, 2));
-
         // === LEFT: Illustration ===
         JLabel imageLabel = new JLabel();
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -43,9 +41,12 @@ public class Login extends JFrame {
             }
         });
 
+
         // === RIGHT: Form Panel ===
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(Color.WHITE);
+        formPanel.setPreferredSize(null); // biar ikut tinggi parent
+        formPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         add(formPanel);
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -123,7 +124,7 @@ public class Login extends JFrame {
 
         loginButton.setOpaque(true);
         loginButton.setBorderPainted(false);
-        
+
         contentWrapper.add(loginButton);
 
         gbc.gridy = 0;
@@ -135,20 +136,19 @@ public class Login extends JFrame {
 
             String role = getUserRoleFromDatabase(username, password);
             if (role != null) {
-                JOptionPane.showMessageDialog(this, "Login berhasil sebagai " + role);
-                Document.currentUser = Document.getUser(username);
-                this.dispose();
-                if (role.equalsIgnoreCase("Admin")) {
-                    new AdminDashboard(username, role);
-                } else {
-                    new Dashboard(username, role);
-                }
+                parentFrame.dispose();
+                new MainApplication(username, role);
             } else {
                 JOptionPane.showMessageDialog(this, "Username/password salah!");
             }
         });
 
         setVisible(true);
+    }
+
+
+    public Login() {
+        this(null);
     }
 
     private String getUserRoleFromDatabase(String username, String password) {
@@ -186,6 +186,7 @@ public class Login extends JFrame {
             }
         }
     }
+
 
     private static class PlaceholderPasswordField extends JPasswordField {
         private final String placeholder;

@@ -92,8 +92,8 @@ public class DocumentDAO {
         }
 
         String query = "SELECT * FROM documents";
-
         Map<String, List<Document.AccessPermission>> accessMap = getAllSharedAccess();
+        Document.User currentUser = Document.currentUser;
 
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(query);
@@ -126,14 +126,23 @@ public class DocumentDAO {
                 doc.generalAccessGroup = (rawGroup == null || rawGroup.trim().isEmpty()) ? "Restricted" : rawGroup;
                 doc.generalAccessRole = (rawRole != null && !rawRole.trim().isEmpty()) ? rawRole : null;
 
-                // Gunakan shared access yang sudah di-load semua sebelumnya
                 doc.sharedWith = accessMap.getOrDefault(id, new ArrayList<>());
                 doc.accessPermissions = new ArrayList<>(doc.sharedWith);
 
-                documents.add(doc);
-                System.out.println("Loading doc: " + title);
-                System.out.println("generalAccessGroup = " + doc.generalAccessGroup);
-                System.out.println("generalAccessRole  = " + doc.generalAccessRole);
+                // 🛡 Filter dokumen berdasarkan akses
+                boolean isOwner = currentUser != null && owner != null && currentUser.id.equals(owner.id);
+                boolean hasSharedAccess = doc.accessPermissions.stream().anyMatch(p -> p.user.id.equals(currentUser.id));
+                boolean hasGeneralAccess = currentUser != null &&
+                        doc.generalAccessRole != null &&
+                        doc.generalAccessGroup != null &&
+                        !doc.generalAccessGroup.equals("Restricted") &&
+                        doc.generalAccessGroup.equals(currentUser.department);
+
+                if (isOwner || hasSharedAccess || hasGeneralAccess) {
+                    documents.add(doc);
+                } else {
+                    System.out.println("⛔ Dokumen disembunyikan: " + title + " (user: " + currentUser.id + ")");
+                }
             }
 
         } catch (Exception e) {

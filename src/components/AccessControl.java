@@ -1,5 +1,6 @@
 package components;
 import pages.ManageDocuments.Document;
+import main.MainApplication;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -308,9 +309,46 @@ public class AccessControl extends JDialog {
                 selectedGroup = "Restricted";
                 selectedRole = null;
             }
+
             DocumentDAO.updateGeneralAccess(currentDoc.id, selectedGroup, selectedRole);
             currentDoc.generalAccessGroup = selectedGroup;
             currentDoc.generalAccessRole = selectedRole;
+
+            // Cek kalau user saat ini sendiri dihapus dari akses
+            if (!currentDoc.owner.id.equals(Document.currentUser.id)) {
+                boolean hadSharedAccess = currentDoc.sharedWith.stream()
+                        .anyMatch(ap -> ap.user.id.equals(Document.currentUser.id));
+                boolean hadGeneralAccess = currentDoc.generalAccessRole != null &&
+                        !currentDoc.generalAccessGroup.equals("Restricted") &&
+                        currentDoc.generalAccessGroup.equals(Document.currentUser.department);
+
+                if (hadSharedAccess) {
+                    DocumentDAO.removeAccessFromDoc(currentDoc.id, Document.currentUser.id);
+                    currentDoc.sharedWith.removeIf(ap -> ap.user.id.equals(Document.currentUser.id));
+                    currentDoc.accessPermissions.removeIf(ap -> ap.user.id.equals(Document.currentUser.id));
+                }
+
+                if (getOwner() instanceof JFrame frame) {
+                    if (frame instanceof main.MainApplication) {
+                        Component comp = frame.getContentPane().getComponent(0);
+                        if (comp instanceof pages.ManageDocuments.MyDocuments docsPanel) {
+                            boolean isOwner = currentDoc.owner.id.equals(Document.currentUser.id);
+                            boolean hasSharedAccess = currentDoc.sharedWith.stream().anyMatch(ap -> ap.user.id.equals(Document.currentUser.id));
+                            boolean hasGeneralAccess = currentDoc.generalAccessRole != null &&
+                                    !currentDoc.generalAccessGroup.equals("Restricted") &&
+                                    currentDoc.generalAccessGroup.equals(Document.currentUser.department);
+
+                            boolean stillHasAccess = isOwner || hasSharedAccess || hasGeneralAccess;
+
+                            if (!stillHasAccess) {
+                                docsPanel.removeDocumentCard(currentDoc.id); // langsung hilang
+                            } else {
+                                docsPanel.refreshDocumentsAsync();
+                            }
+                        }
+                    }
+                }
+            }
 
             dispose();
         });
