@@ -390,7 +390,7 @@ public class AccessControl extends JDialog {
             roleLabel.setBorder(new EmptyBorder(8, 0, 0, 0));
             personRow.add(roleLabel, BorderLayout.EAST);
         } else {
-            String[] roleOptions = {"Viewer", "Editor", "Remove Access"};
+            String[] roleOptions = {"Viewer", "Remove Access"};
             JComboBox<String> roleDropdown = new JComboBox<>(roleOptions);
             roleDropdown.setSelectedItem(role);
             roleDropdown.setFont(new Font("Arial", Font.PLAIN, 13));
