@@ -387,15 +387,8 @@ public class UserManagementDashboard extends JPanel {
         deleteBtn.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         deleteBtn.addActionListener(e -> {
             // Perform deletion
-            boolean success = UserDAO.deleteUser(username);
-            if (success) {
-                JOptionPane.showMessageDialog(dialog, "User deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                dialog.dispose();
-                // Refresh the user table
-                createUsersTable();
-            } else {
-                JOptionPane.showMessageDialog(dialog, "Failed to delete user.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            deleteUser(username);
+            dialog.dispose();
         });
         
         buttonsPanel.add(cancelBtn);
@@ -441,6 +434,17 @@ public class UserManagementDashboard extends JPanel {
             EditUserPage editPage = new EditUserPage(username, userRole, selectedUser, parentContainer);
             parent.add(editPage, "EDIT_USER");
             cardLayout.show(parent, "EDIT_USER");
+        }
+    }
+    
+    private void deleteUser(String username) {
+        boolean success = UserDAO.deleteUser(username);
+        if (success) {
+            JOptionPane.showMessageDialog(this, "User deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            // Refresh the user table automatically
+            createUsersTable();
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to delete user.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
     

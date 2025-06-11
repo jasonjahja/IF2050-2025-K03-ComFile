@@ -17,6 +17,11 @@ public class AddUserPage extends JPanel {
     private JComboBox<String> roleCombo;
     private JComboBox<String> departmentCombo;
     private JComboBox<String> statusCombo;
+    
+    // Alternative field names for compatibility
+    private JComboBox<String> roleComboBox;
+    private JComboBox<String> departmentComboBox;
+    private JComboBox<String> statusComboBox;
     private JPanel photoCircle;
     private java.io.File selectedPhotoFile;
     private String currentAvatarPath;
@@ -153,10 +158,10 @@ public class AddUserPage extends JPanel {
         formPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 40));
         
         // Basic Information
-        formPanel.add(createFormField("Full Name", fullNameField = new JTextField("Olivia Rhye")));
+        formPanel.add(createFormField("Full Name", fullNameField = new JTextField()));
         formPanel.add(Box.createVerticalStrut(20));
         
-        formPanel.add(createFormField("Username", usernameField = new JTextField("Olivia Rhye")));
+        formPanel.add(createFormField("Username", usernameField = new JTextField()));
         formPanel.add(Box.createVerticalStrut(20));
         
         formPanel.add(createPasswordField("Password"));
@@ -175,14 +180,14 @@ public class AddUserPage extends JPanel {
         twoColumnPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         twoColumnPanel.setMaximumSize(new Dimension(800, 80));
         
-        twoColumnPanel.add(createComboField("Role", roleCombo = new JComboBox<>(new String[]{"Karyawan", "Manajer", "Admin"})));
-        twoColumnPanel.add(createComboField("Department", departmentCombo = new JComboBox<>(new String[]{"Design", "Product", "Marketing", "Finance", "Legal"})));
+        twoColumnPanel.add(createComboField("Role", roleCombo = roleComboBox = new JComboBox<>(new String[]{"Karyawan", "Manajer", "Admin"})));
+        twoColumnPanel.add(createComboField("Department", departmentCombo = departmentComboBox = new JComboBox<>(new String[]{"Design", "Product", "Marketing", "Finance", "Legal"})));
         
         formPanel.add(twoColumnPanel);
         formPanel.add(Box.createVerticalStrut(30));
         
         // Status field
-        formPanel.add(createComboField("Status", statusCombo = new JComboBox<>(new String[]{"Active", "Inactive"})));
+        formPanel.add(createComboField("Status", statusCombo = statusComboBox = new JComboBox<>(new String[]{"Active", "Inactive"})));
         
         return formPanel;
     }
@@ -232,7 +237,7 @@ public class AddUserPage extends JPanel {
         passwordField = new JPasswordField();
         passwordField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         passwordField.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
-        passwordField.setText("••••••••");
+        passwordField.setEchoChar('•'); // Use proper password masking
         
         JLabel eyeIcon = new JLabel("👁");
         eyeIcon.setFont(new Font("SansSerif", Font.PLAIN, 16));
