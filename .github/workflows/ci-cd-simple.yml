@@ -212,7 +212,7 @@ jobs:
       id: create_release
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.ACTIONS }}
       with:
         tag_name: v${{ steps.version.outputs.version }}
         release_name: Release v${{ steps.version.outputs.version }}
@@ -239,7 +239,7 @@ jobs:
     - name: Upload Standard JAR Asset
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.ACTIONS }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: dist/document-management-system.jar
@@ -249,7 +249,7 @@ jobs:
     - name: Upload Executable JAR Asset
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.ACTIONS }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: dist/executable/ComFile-DocumentManagement.jar
