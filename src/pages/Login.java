@@ -74,25 +74,29 @@ public class Login extends JPanel {
 
         JLabel usernameLabel = new JLabel("Username");
         usernameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        usernameLabel.setBounds(60, 220, 400, 20);
+        usernameLabel.setBounds(60, 210, 400, 20);
         contentWrapper.add(usernameLabel);
 
-        usernameField = new PlaceholderTextField("oliviarhye");
+        usernameField = new PlaceholderTextField("e.g. oliviarhye");
         usernameField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        usernameField.setBounds(60, 245, 400, 44);
+        usernameField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220)),
+            new EmptyBorder(10, 10, 10, 10)
+        ));
+        usernameField.setBounds(60, 240, 400, 44);
         contentWrapper.add(usernameField);
 
         JLabel passwordLabel = new JLabel("Password");
         passwordLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        passwordLabel.setBounds(60, 330, 400, 20);
+        passwordLabel.setBounds(60, 305, 400, 20);
         contentWrapper.add(passwordLabel);
 
         JPanel passwordWrapper = new JPanel(new BorderLayout());
-        passwordWrapper.setBounds(60, 355, 400, 44);
+        passwordWrapper.setBounds(60, 335, 400, 44);
         passwordWrapper.setBackground(Color.WHITE);
         passwordWrapper.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
 
-        passwordField = new PlaceholderPasswordField("Enter your password");
+        passwordField = new PlaceholderPasswordField("**********");
         passwordField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         passwordField.setBorder(new EmptyBorder(10, 10, 10, 10));
         passwordWrapper.add(passwordField, BorderLayout.CENTER);
@@ -118,19 +122,27 @@ public class Login extends JPanel {
         });
 
         JButton loginButton = new JButton("Login");
-        loginButton.setBounds(60, 445, 400, 44);
+        loginButton.setBounds(60, 475, 400, 44);
         loginButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         loginButton.setBackground(Color.decode("#5A6ACF"));
         loginButton.setForeground(Color.WHITE);
         loginButton.setFocusPainted(false);
-
         loginButton.setOpaque(true);
         loginButton.setBorderPainted(false);
+        loginButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         contentWrapper.add(loginButton);
 
         gbc.gridy = 0;
         formPanel.add(contentWrapper, gbc);
+
+        JLabel loginErrorLabel = new JLabel();
+        loginErrorLabel.setForeground(Color.RED);
+        loginErrorLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        loginErrorLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        loginErrorLabel.setSize(400, 20);
+        loginErrorLabel.setLocation(60, 525); // tombol Y + tinggi tombol + jarak
+        contentWrapper.add(loginErrorLabel);
 
         // Create login action that can be reused
         ActionListener loginAction = e -> {
@@ -142,7 +154,15 @@ public class Login extends JPanel {
                 parentFrame.dispose();
                 new MainApplication(username, role);
             } else {
-                JOptionPane.showMessageDialog(this, "Username/password salah!");
+                usernameField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(Color.RED),
+                    new EmptyBorder(10, 10, 10, 10)
+                ));
+                passwordField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(Color.RED),
+                    new EmptyBorder(10, 10, 10, 10)
+                ));
+                loginErrorLabel.setText("Invalid username or password");
             }
         };
 
