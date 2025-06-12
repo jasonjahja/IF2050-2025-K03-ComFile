@@ -151,8 +151,13 @@ public class Login extends JPanel {
 
             String role = getUserRoleFromDatabase(username, password);
             if (role != null) {
-                parentFrame.dispose();
-                new MainApplication(username, role);
+                MainApplication app = (MainApplication) SwingUtilities.getWindowAncestor(this);
+                app.getContentPane().removeAll(); // Bersihkan isi frame
+                app.initializeApplication(); 
+                app.createPages(username, role);
+                app.setupLayout();
+                app.revalidate();
+                app.repaint();
             } else {
                 usernameField.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(Color.RED),
