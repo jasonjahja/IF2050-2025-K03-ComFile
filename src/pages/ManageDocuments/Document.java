@@ -177,6 +177,8 @@ public class Document {
     }
 
     public static boolean hasAccess(Doc doc, User user) {
+        if (user.role != null && user.role.equalsIgnoreCase("Admin")) return true;
+
         if (doc.owner.id.equals(user.id)) return true;
 
         for (AccessPermission ap : doc.sharedWith) {
@@ -187,7 +189,6 @@ public class Document {
             if (ap.user.id.equals(user.id)) return true;
         }
 
-        // Tambahan: akses berdasarkan department
         if (doc.generalAccessGroup != null && doc.generalAccessRole != null) {
             String userRole = user.role != null ? user.role.trim().toLowerCase() : "";
             String userDept = user.department != null ? user.department.trim().toLowerCase() : "";
@@ -198,8 +199,7 @@ public class Document {
                 return accessRole.equals("viewer") || accessRole.equals("editor");
             }
         }
-        System.out.println("User: " + user.id + " | Role: " + user.role + " | Dept: " + user.department);
-        System.out.println("Doc: " + doc.title + " | Group: " + doc.generalAccessGroup + " | Role: " + doc.generalAccessRole);
+
         return false;
     }
 
