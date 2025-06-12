@@ -136,6 +136,39 @@ public class Login extends JPanel {
         gbc.gridy = 0;
         formPanel.add(contentWrapper, gbc);
 
+        loginButton.addMouseListener(new MouseAdapter() {
+            final Color normalColor = Color.decode("#5A6ACF");
+            final Color hoverColor = new Color(70, 86, 187);
+            final Color pressedColor = new Color(55, 70, 150);
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                loginButton.setBackground(hoverColor);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                loginButton.setBackground(normalColor);
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                loginButton.setBackground(pressedColor);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // If mouse is still over the button when released
+                if (loginButton.getBounds().contains(e.getPoint())) {
+                    loginButton.setBackground(hoverColor);
+                } else {
+                    loginButton.setBackground(normalColor);
+                }
+            }
+        });
+
+
+
         JLabel loginErrorLabel = new JLabel();
         loginErrorLabel.setForeground(Color.RED);
         loginErrorLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));

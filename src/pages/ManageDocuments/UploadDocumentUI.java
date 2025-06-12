@@ -105,20 +105,33 @@ public class UploadDocumentUI extends JDialog {
         uploadButton.setMinimumSize(new Dimension(180, 40));
         uploadButton.setMaximumSize(new Dimension(180, 40));
 
-        uploadButton.addMouseListener(new MouseAdapter() {
-            private final Color defaultColor = Color.decode("#5A6ACF");
-            private final Color hoverColor = Color.decode("#4857B0");
+        uploadButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            final Color normalColor = Color.decode("#5A6ACF");
+            final Color hoverColor = new Color(70, 86, 187);
+            final Color pressedColor = new Color(55, 70, 150);
 
             @Override
-            public void mouseEntered(MouseEvent e) {
+            public void mouseEntered(java.awt.event.MouseEvent e) {
                 uploadButton.setBackground(hoverColor);
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                uploadButton.setBackground(defaultColor);
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                uploadButton.setBackground(normalColor);
+            }
+
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                uploadButton.setBackground(pressedColor);
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+                uploadButton.setBackground(hoverColor);
             }
         });
+
+        uploadButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         uploadButton.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();

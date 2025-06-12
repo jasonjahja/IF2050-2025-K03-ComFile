@@ -129,6 +129,7 @@ public class NavigationBar extends JPanel {
         roleLabel = new JLabel("Employee");
         roleLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         namePanel.add(nameLabel);
+        namePanel.add(Box.createVerticalStrut(4));
         namePanel.add(roleLabel);
         profileCard.add(namePanel, BorderLayout.CENTER);
 

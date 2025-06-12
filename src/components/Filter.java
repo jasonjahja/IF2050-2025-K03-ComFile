@@ -1,6 +1,9 @@
 package components;
 
 import javax.swing.*;
+
+import org.w3c.dom.events.MouseEvent;
+
 import java.awt.*;
 
 public class Filter extends JPanel {
@@ -96,6 +99,35 @@ public class Filter extends JPanel {
 
         resetButton = createStyledButton("Reset", false);
         applyButton = createStyledButton("Apply", true);
+
+        applyButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            final Color normalColor = Color.decode("#5A6ACF");
+            final Color hoverColor = new Color(70, 86, 187);
+            final Color pressedColor = new Color(55, 70, 150);
+
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                applyButton.setBackground(hoverColor);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                applyButton.setBackground(normalColor);
+            }
+
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                applyButton.setBackground(pressedColor);
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+                applyButton.setBackground(hoverColor);
+            }
+        });
+
+        resetButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        applyButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         buttonPanel.add(resetButton);
         buttonPanel.add(Box.createHorizontalStrut(8));
