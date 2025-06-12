@@ -178,7 +178,6 @@ public class AccessControl extends JDialog {
         combinedGroupSet.add("Restricted");
         combinedGroupSet.addAll(DocumentDAO.getAllRoles());
         combinedGroupSet.addAll(DocumentDAO.getAllDepartments());
-        combinedGroupSet.add("All Staff");
 
         String[] groups = combinedGroupSet.toArray(new String[0]);
 

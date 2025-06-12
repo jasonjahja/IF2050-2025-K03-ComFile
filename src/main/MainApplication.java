@@ -9,6 +9,8 @@ import pages.Dashboard.Dashboard;
 import pages.Admin.AdminDashboard;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+
 import java.awt.*;
 
 public class MainApplication extends JFrame implements NavigationBar.NavigationListener {
@@ -167,12 +169,92 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
     @Override
     public void onLogoutClicked() {
-        int result = JOptionPane.showConfirmDialog(this,
-                "Are you sure you want to logout?",
-                "Confirm Logout",
-                JOptionPane.YES_NO_OPTION);
+        showLogoutConfirmation(this);
+    }
 
-        if (result == JOptionPane.YES_OPTION) {
+    private void showLogoutConfirmation(Window parent) {
+        JLayeredPane layeredPane = getLayeredPane();
+
+        // Buat dark overlay
+        JPanel darkOverlay = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                g.setColor(new Color(0, 0, 0, 120)); // Semi-transparan
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        darkOverlay.setOpaque(false);
+        darkOverlay.setBounds(0, 0, getWidth(), getHeight());
+
+        layeredPane.add(darkOverlay, JLayeredPane.MODAL_LAYER);
+        layeredPane.repaint();
+
+        // Buat dialog logout
+        JDialog dialog = new JDialog(parent, "Logout Confirmation", Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setUndecorated(true);
+        dialog.setSize(400, 420);
+        dialog.setLocationRelativeTo(parent);
+
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(230, 230, 230)),
+                new EmptyBorder(30, 30, 30, 30)
+        ));
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        JLabel iconLabel = new JLabel();
+        ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("img/logout-illustration.png"));
+        iconLabel.setIcon(new ImageIcon(icon.getImage().getScaledInstance(180, 180, Image.SCALE_SMOOTH)));
+        iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(iconLabel);
+
+        panel.add(Box.createVerticalStrut(20));
+
+        JLabel msgLabel = new JLabel("<html>You will be <font color='#D62955'>logged out</font> from this account</html>");
+        msgLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        msgLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        msgLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(msgLabel);
+
+        panel.add(Box.createVerticalStrut(10));
+
+        JLabel confirmLabel = new JLabel("Do you want to proceed?");
+        confirmLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        confirmLabel.setForeground(new Color(120, 120, 120));
+        confirmLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(confirmLabel);
+
+        panel.add(Box.createVerticalStrut(30));
+
+        // Log Out button
+        JButton logoutBtn = new JButton("Log Out") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(214, 41, 85)); // Red
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        logoutBtn.setOpaque(false);
+        logoutBtn.setContentAreaFilled(false);
+        logoutBtn.setBorderPainted(false);
+        logoutBtn.setFocusPainted(false);
+        logoutBtn.setForeground(Color.WHITE);
+        logoutBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        logoutBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        logoutBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+        logoutBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        logoutBtn.addActionListener(e -> {
+            dialog.dispose();
+            layeredPane.remove(darkOverlay);
+            layeredPane.repaint();
+
             dispose();
             JFrame frame = new JFrame("ComFile Login");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -180,8 +262,35 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
             frame.setLocationRelativeTo(null);
             frame.setContentPane(new Login(frame));
             frame.setVisible(true);
-        }
+        });
+
+        // Cancel button
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(Color.WHITE);
+        cancelBtn.setForeground(new Color(214, 41, 85));
+        cancelBtn.setFocusPainted(false);
+        cancelBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        cancelBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cancelBtn.setBorder(BorderFactory.createLineBorder(new Color(214, 41, 85)));
+        cancelBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+        cancelBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+
+        cancelBtn.addActionListener(e -> {
+            dialog.dispose();
+            layeredPane.remove(darkOverlay);
+            layeredPane.repaint();
+        });
+
+        panel.add(logoutBtn);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(cancelBtn);
+
+        dialog.setContentPane(panel);
+        dialog.setVisible(true);
     }
+
+
 
     public static void startWithUser(String username, String role) {
         SwingUtilities.invokeLater(() -> new MainApplication(username, role));
