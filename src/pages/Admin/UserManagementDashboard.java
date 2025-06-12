@@ -1,6 +1,5 @@
 package pages.Admin;
 
-import components.NavigationBar;
 import utils.UserDAO;
 import javax.swing.*;
 import java.awt.*;

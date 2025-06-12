@@ -1,0 +1,51 @@
+# ========================================
+# COMFILE - SYSTEM REQUIREMENTS
+# Document Management System
+# ========================================
+
+# System Requirements
+java>=17
+postgresql>=13
+git>=2.0
+
+# Runtime Dependencies
+# PostgreSQL JDBC Driver
+postgresql-42.7.2.jar
+
+# Built-in Java Libraries (included with JDK)
+# javax.swing.*
+# java.awt.*
+# java.sql.*
+# java.io.*
+# java.util.*
+
+# Development Tools (included with JDK)
+# javac (Java Compiler)
+# jar (JAR Archive Tool)
+# java (Java Runtime)
+
+# Build Tools
+# make (optional - Unix/Linux only)
+# Windows batch scripts: build.bat, run.bat
+
+# Database Configuration
+# Neon PostgreSQL Cloud Database
+# URL: jdbc:postgresql://ep-shy-leaf-a8yseowb-pooler.eastus2.azure.neon.tech/neondb?sslmode=require
+# Username: neondb_owner
+# Password: [configured in DBConnection.java]
+
+# Platform Support
+# Windows 10/11 - Full support
+# macOS - Compatible  
+# Linux - Compatible
+# GitHub Actions - CI/CD support
+
+# Optional Development Tools
+# IntelliJ IDEA (recommended IDE)
+# VS Code (lightweight editor)
+# pgAdmin (database management)
+
+# CI/CD Dependencies
+# GitHub Actions with Java 17 (eclipse-temurin)
+# Ubuntu Latest runner
+# OWASP Dependency Check for security scanning 

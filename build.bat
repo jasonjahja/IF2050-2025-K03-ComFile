@@ -71,13 +71,39 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo.
+echo [6/6] Creating Fat JAR (with all dependencies)...
+if not exist "out\fat-jar" mkdir out\fat-jar
+
+REM Extract PostgreSQL JAR
+cd out\fat-jar
+jar xf ..\..\lib\postgresql-42.7.2.jar
+cd ..\..
+
+REM Copy application classes
+xcopy /E /Y out\production\* out\fat-jar\
+
+REM Create manifest for fat JAR
+echo Main-Class: main.MainApplication > manifest-fat.txt
+
+REM Create fat JAR
+jar cfm dist\document-management-system-fat.jar manifest-fat.txt -C out\fat-jar .
+
+if %ERRORLEVEL% neq 0 (
+    echo ERROR: Fat JAR creation failed!
+    pause
+    exit /b 1
+)
+
+echo.
 echo ✅ Build completed successfully!
 echo 📦 JAR file created: dist\document-management-system.jar
+echo 📦 Fat JAR created: dist\document-management-system-fat.jar
 echo.
-echo To run the application:
-echo   java -jar dist\document-management-system.jar
+echo 🚀 CARA MENJALANKAN:
+echo   Regular JAR: java -jar dist\document-management-system.jar
+echo   Fat JAR:     java -jar dist\document-management-system-fat.jar
+echo   Direct:      java -cp "lib\*;out\production" main.MainApplication
 echo.
-echo Or run directly:
-echo   java -cp "lib\*;out\production" main.MainApplication
+echo 💡 Jika database error, gunakan Fat JAR (semua dependencies ter-include)
 echo.
 pause 

@@ -1,6 +1,5 @@
 package pages.Admin;
 
-import components.NavigationBar;
 import utils.UserDAO;
 import javax.swing.*;
 import java.awt.*;
@@ -18,10 +17,6 @@ public class AddUserPage extends JPanel {
     private JComboBox<String> departmentCombo;
     private JComboBox<String> statusCombo;
     
-    // Alternative field names for compatibility
-    private JComboBox<String> roleComboBox;
-    private JComboBox<String> departmentComboBox;
-    private JComboBox<String> statusComboBox;
     private JPanel photoCircle;
     private java.io.File selectedPhotoFile;
     private String currentAvatarPath;
@@ -180,14 +175,14 @@ public class AddUserPage extends JPanel {
         twoColumnPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         twoColumnPanel.setMaximumSize(new Dimension(800, 80));
         
-        twoColumnPanel.add(createComboField("Role", roleCombo = roleComboBox = new JComboBox<>(new String[]{"Karyawan", "Manajer", "Admin"})));
-        twoColumnPanel.add(createComboField("Department", departmentCombo = departmentComboBox = new JComboBox<>(new String[]{"Design", "Product", "Marketing", "Finance", "Legal"})));
+        twoColumnPanel.add(createComboField("Role", roleCombo = new JComboBox<>(new String[]{"Karyawan", "Manajer", "Admin"})));
+        twoColumnPanel.add(createComboField("Department", departmentCombo = new JComboBox<>(new String[]{"Design", "Product", "Marketing", "Finance", "Legal"})));
         
         formPanel.add(twoColumnPanel);
         formPanel.add(Box.createVerticalStrut(30));
         
         // Status field
-        formPanel.add(createComboField("Status", statusCombo = statusComboBox = new JComboBox<>(new String[]{"Active", "Inactive"})));
+        formPanel.add(createComboField("Status", statusCombo = new JComboBox<>(new String[]{"Active", "Inactive"})));
         
         return formPanel;
     }

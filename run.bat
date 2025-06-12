@@ -9,10 +9,17 @@ echo SISTEM MANAJEMEN DOKUMEN - MENJALANKAN
 echo ======================================
 echo.
 
-REM Check if JAR file exists
-if exist "dist\document-management-system.jar" (
+REM Check if Fat JAR file exists (prioritas tertinggi)
+if exist "dist\document-management-system-fat.jar" (
+    echo 🚀 Menjalankan aplikasi dari Fat JAR file...
+    echo 📋 Pastikan koneksi internet aktif untuk database Neon
+    echo 📚 Menggunakan Fat JAR dengan PostgreSQL driver ter-include
+    echo.
+    java -jar dist\document-management-system-fat.jar
+) else if exist "dist\document-management-system.jar" (
     echo 🚀 Menjalankan aplikasi dari JAR file...
     echo 📋 Pastikan koneksi internet aktif untuk database Neon
+    echo ⚠️  Note: Jika database error, jalankan build.bat ulang untuk Fat JAR
     echo.
     java -jar dist\document-management-system.jar
 ) else (
@@ -35,6 +42,7 @@ if exist "dist\document-management-system.jar" (
 
 echo.
 echo 👤 USER LOGIN TESTING:
+echo   Admin    : admincf / admin123
 echo   Manager  : lanasteiner / lana123
 echo   Karyawan : oliviarhye / olivia123
 echo.
