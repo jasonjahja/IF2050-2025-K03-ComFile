@@ -70,10 +70,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         }
 
         documentsPage = new MyDocuments();
-        JPanel backupPage = createPlaceholderPage("Backup Page", "Backup and restore your documents");
-
         contentPanel.add(documentsPage, "DOCUMENTS");
-        contentPanel.add(backupPage, "BACKUP");
     }
 
     public JPanel createPlaceholderPage(String title, String description) {
@@ -166,19 +163,6 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
             documentsPage.refreshDocumentsAsync(); // Pakai versi async
         }
         cardLayout.show(contentPanel, "DOCUMENTS");
-    }
-
-    @Override
-    public void onBackupClicked() {
-        cardLayout.show(contentPanel, "BACKUP");
-    }
-
-    @Override
-    public void onNotificationClicked() {
-        JOptionPane.showMessageDialog(this,
-                "You have 3 new notifications",
-                "Notifications",
-                JOptionPane.INFORMATION_MESSAGE);
     }
 
     @Override

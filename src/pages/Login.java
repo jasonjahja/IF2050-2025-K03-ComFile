@@ -165,7 +165,7 @@ public class Login extends JPanel {
                 ));
                 passwordWrapper.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(Color.RED),
-                    new EmptyBorder(10, 10, 10, 0)
+                    new EmptyBorder(0,0,0, 0)
                 ));
                 loginErrorLabel.setText("Invalid username or password");
             }
