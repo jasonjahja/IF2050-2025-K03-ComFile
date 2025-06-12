@@ -5,6 +5,7 @@ import pages.Dashboard.Dashboard;
 import pages.Admin.AdminDashboard;
 import utils.DBConnection;
 import utils.ImageLoader;
+import utils.UserContext;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -184,13 +185,34 @@ public class Login extends JPanel {
 
             String role = getUserRoleFromDatabase(username, password);
             if (role != null) {
-                MainApplication app = (MainApplication) SwingUtilities.getWindowAncestor(this);
-                app.getContentPane().removeAll(); // Bersihkan isi frame
-                app.initializeApplication(); 
-                app.createPages(username, role);
-                app.setupLayout();
-                app.revalidate();
-                app.repaint();
+                // Set user context before recreating the application
+                UserContext userContext = UserContext.getInstance();
+                userContext.setCurrentUser(username, role);
+                
+                // Get the current window
+                Window window = SwingUtilities.getWindowAncestor(this);
+                
+                // Check if the current window is a MainApplication
+                if (window instanceof MainApplication) {
+                    // If it's already a MainApplication, reuse it
+                    MainApplication app = (MainApplication) window;
+                    app.getContentPane().removeAll();
+                    app.initializeApplication(); 
+                    app.createPages(username, role);
+                    app.setupLayout();
+                    app.revalidate();
+                    app.repaint();
+                } else {
+                    // If it's not a MainApplication (e.g., after logout), create a new one
+                    if (window != null) {
+                        window.dispose(); // Close the current window
+                    }
+                    
+                    // Create a new MainApplication instance
+                    SwingUtilities.invokeLater(() -> {
+                        new MainApplication(username, role);
+                    });
+                }
             } else {
                 usernameField.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(Color.RED),

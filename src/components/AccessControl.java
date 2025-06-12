@@ -2,6 +2,7 @@ package components;
 import pages.ManageDocuments.Document;
 import main.MainApplication;
 import utils.ImageLoader;
+import utils.UserContext;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -315,28 +316,31 @@ public class AccessControl extends JDialog {
             currentDoc.generalAccessRole = selectedRole;
 
             // Cek kalau user saat ini sendiri dihapus dari akses
-            if (!currentDoc.owner.id.equals(Document.currentUser.id)) {
+            UserContext userContext = UserContext.getInstance();
+            Document.User currentUser = userContext.getCurrentUser();
+            
+            if (currentUser != null && !currentDoc.owner.id.equals(currentUser.id)) {
                 boolean hadSharedAccess = currentDoc.sharedWith.stream()
-                        .anyMatch(ap -> ap.user.id.equals(Document.currentUser.id));
+                        .anyMatch(ap -> ap.user.id.equals(currentUser.id));
                 boolean hadGeneralAccess = currentDoc.generalAccessRole != null &&
                         !currentDoc.generalAccessGroup.equals("Restricted") &&
-                        currentDoc.generalAccessGroup.equals(Document.currentUser.department);
+                        currentDoc.generalAccessGroup.equals(currentUser.department);
 
                 if (hadSharedAccess) {
-                    DocumentDAO.removeAccessFromDoc(currentDoc.id, Document.currentUser.id);
-                    currentDoc.sharedWith.removeIf(ap -> ap.user.id.equals(Document.currentUser.id));
-                    currentDoc.accessPermissions.removeIf(ap -> ap.user.id.equals(Document.currentUser.id));
+                    DocumentDAO.removeAccessFromDoc(currentDoc.id, currentUser.id);
+                    currentDoc.sharedWith.removeIf(ap -> ap.user.id.equals(currentUser.id));
+                    currentDoc.accessPermissions.removeIf(ap -> ap.user.id.equals(currentUser.id));
                 }
 
                 if (getOwner() instanceof JFrame frame) {
                     if (frame instanceof main.MainApplication) {
                         Component comp = frame.getContentPane().getComponent(0);
                         if (comp instanceof pages.ManageDocuments.MyDocuments docsPanel) {
-                            boolean isOwner = currentDoc.owner.id.equals(Document.currentUser.id);
-                            boolean hasSharedAccess = currentDoc.sharedWith.stream().anyMatch(ap -> ap.user.id.equals(Document.currentUser.id));
+                            boolean isOwner = currentDoc.owner.id.equals(currentUser.id);
+                            boolean hasSharedAccess = currentDoc.sharedWith.stream().anyMatch(ap -> ap.user.id.equals(currentUser.id));
                             boolean hasGeneralAccess = currentDoc.generalAccessRole != null &&
                                     !currentDoc.generalAccessGroup.equals("Restricted") &&
-                                    currentDoc.generalAccessGroup.equals(Document.currentUser.department);
+                                    currentDoc.generalAccessGroup.equals(currentUser.department);
 
                             boolean stillHasAccess = isOwner || hasSharedAccess || hasGeneralAccess;
 

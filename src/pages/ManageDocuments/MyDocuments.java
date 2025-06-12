@@ -5,6 +5,7 @@ import components.Filter;
 import pages.ManageDocuments.Document.Doc;
 import utils.DocumentDAO;
 import utils.ImageLoader;
+import utils.UserContext;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentListener;
@@ -296,7 +297,7 @@ public class MyDocuments extends JPanel {
                             UUID.randomUUID().toString(),
                             docTitle,
                             "Uploaded via UI",
-                            Document.currentUser,
+                            UserContext.getInstance().getCurrentUser(),
                             now, now, now,
                             1,
                             fileType.toUpperCase(),
@@ -378,7 +379,7 @@ public class MyDocuments extends JPanel {
 
         List<Doc> allDocs = DocumentDAO.getAllDocumentsFromDB();
         List<Doc> visibleDocs = allDocs.stream()
-                .filter(doc -> Document.hasAccess(doc, Document.currentUser))
+                .filter(doc -> Document.hasAccess(doc, UserContext.getInstance().getCurrentUser()))
                 .collect(Collectors.toList());
 
         if (visibleDocs.isEmpty()) {
@@ -517,8 +518,8 @@ public class MyDocuments extends JPanel {
         deleteDoc.setFont(new Font("SansSerif", Font.BOLD, 12));
 
 // Cek role sebelum menambahkan menu
-        if (Document.currentUser != null &&
-                (Document.currentUser.role.equalsIgnoreCase("Manajer") || Document.currentUser.role.equalsIgnoreCase("Admin"))) {
+        UserContext userContext = UserContext.getInstance();
+        if (userContext.isCurrentUserManager() || userContext.isCurrentUserAdmin()) {
             popupMenu.add(manageAccess);
             popupMenu.addSeparator();
         }
@@ -606,7 +607,7 @@ public class MyDocuments extends JPanel {
                 String date = dateFormat.format(file.lastModified());
 
                 Doc dummyDoc = new Doc(
-                        UUID.randomUUID().toString(), name, "-", Document.currentUser,
+                        UUID.randomUUID().toString(), name, "-", UserContext.getInstance().getCurrentUser(),
                         new Date(), new Date(), new Date(), 1,
                         "UNKNOWN", 0, file.getAbsolutePath()
                 );
@@ -785,13 +786,14 @@ public class MyDocuments extends JPanel {
                     List<Doc> all = get();
                     
                     // For admin users, show all documents without additional filtering
-                    if (Document.currentUser != null && "Admin".equalsIgnoreCase(Document.currentUser.role)) {
+                    UserContext userContext = UserContext.getInstance();
+                    if (userContext.isCurrentUserAdmin()) {
                         cachedDocs = all.stream()
                                 .collect(Collectors.toList());
                     } else {
                         // For non-admin users, filter based on access
                         cachedDocs = all.stream()
-                                .filter(doc -> Document.hasAccess(doc, Document.currentUser))
+                                .filter(doc -> Document.hasAccess(doc, userContext.getCurrentUser()))
                                 .collect(Collectors.toList());
                     }
                     
@@ -824,12 +826,13 @@ public class MyDocuments extends JPanel {
 
         // For admin users, show all documents without additional filtering
         List<Doc> visibleDocs;
-        if (Document.currentUser != null && "Admin".equalsIgnoreCase(Document.currentUser.role)) {
+        UserContext userContext = UserContext.getInstance();
+        if (userContext.isCurrentUserAdmin()) {
             visibleDocs = docs;
         } else {
             // For non-admin users, filter based on access
             visibleDocs = docs.stream()
-                    .filter(doc -> Document.hasAccess(doc, Document.currentUser))
+                    .filter(doc -> Document.hasAccess(doc, userContext.getCurrentUser()))
                     .toList();
         }
         

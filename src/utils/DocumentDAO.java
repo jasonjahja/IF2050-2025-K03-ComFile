@@ -93,7 +93,9 @@ public class DocumentDAO {
 
         String query = "SELECT * FROM documents";
         Map<String, List<Document.AccessPermission>> accessMap = getAllSharedAccess();
-        Document.User currentUser = Document.currentUser;
+        
+        UserContext userContext = UserContext.getInstance();
+        Document.User currentUser = userContext.getCurrentUser();
         
         System.out.println("🔍 Getting documents for user: " + 
             (currentUser != null ? currentUser.id + " (Role: " + currentUser.role + ")" : "null"));

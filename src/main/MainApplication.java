@@ -4,6 +4,7 @@ import components.NavigationBar;
 import pages.ManageDocuments.MyDocuments;
 import pages.Login;
 import utils.DocumentDAO;
+import utils.UserContext;
 import pages.ManageDocuments.Document;
 import pages.Dashboard.Dashboard;
 import pages.Admin.AdminDashboard;
@@ -26,10 +27,16 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
         // Setup user from accesscontrol branch
         Document.users = DocumentDAO.loadAllUsers();
+        
+        // Use UserContext to manage the current user
+        UserContext userContext = UserContext.getInstance();
+        userContext.setCurrentUser(username, role);
+        
+        // For backward compatibility, also update Document.currentUser
         Document.currentUser = Document.getUser(username);
-        System.out.println("✅ SET currentUser: " + Document.currentUser.getUsername()
-                + " | Role: " + Document.currentUser.getRole()
-                + " | Dept: " + Document.currentUser.getDepartment());
+        System.out.println("✅ SET currentUser via UserContext: " + userContext.getCurrentUsername()
+                + " | Role: " + userContext.getCurrentRole()
+                + " | Dept: " + userContext.getCurrentUserDepartment());
 
         initializeApplication();
         createPages(username, role);
@@ -152,7 +159,8 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
     @Override
     public void onHomeClicked() {
-        if (Document.currentUser != null && Document.currentUser.getRole().equalsIgnoreCase("Admin")) {
+        UserContext userContext = UserContext.getInstance();
+        if (userContext.isCurrentUserAdmin()) {
             cardLayout.show(contentPanel, "ADMIN_DASHBOARD");
         } else {
             cardLayout.show(contentPanel, "HOME");
@@ -169,6 +177,8 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
     @Override
     public void onLogoutClicked() {
+        // Clear user context on logout
+        UserContext.getInstance().clearCurrentUser();
         showLogoutConfirmation(this);
     }
 
@@ -258,7 +268,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
             dispose();
             JFrame frame = new JFrame("ComFile Login");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1080, 720);
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
             frame.setLocationRelativeTo(null);
             frame.setContentPane(new Login(frame));
             frame.setVisible(true);
