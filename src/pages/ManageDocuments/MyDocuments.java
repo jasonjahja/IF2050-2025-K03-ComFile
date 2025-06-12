@@ -535,9 +535,9 @@ public class MyDocuments extends JPanel {
             Window parentWindow = SwingUtilities.getWindowAncestor(documentsGrid);
             File fileToDelete = new File(doc.filePath);
             showDeleteConfirmation(parentWindow, doc.title, () -> {
-                boolean fileDeleted = fileToDelete.delete();
-                System.out.println("File deleted? " + fileDeleted);
                 DocumentDAO.deleteDocumentById(doc.id);
+                refreshDocumentsAsync();
+                cachedDocs.removeIf(d -> d.id.equals(doc.id));
                 refreshDocumentsAsync();
             });
         });
@@ -784,6 +784,7 @@ public class MyDocuments extends JPanel {
                     List<Doc> all = get();
                     cachedDocs = all.stream()
                             .filter(doc -> Document.hasAccess(doc, Document.currentUser))
+                            .filter(doc -> new File(doc.filePath).exists())
                             .collect(Collectors.toList());
                     loadDocumentsFromList(cachedDocs);
                 } catch (Exception e) {
