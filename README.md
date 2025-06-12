@@ -1,10 +1,10 @@
-# 📋 ComFile - Sistem Manajemen Dokumen
+# ComFile - Document Management System
 
-## 👥 Informasi Kelompok
+## Group Information
 
-**Kelompok K3C**
+**Group K3C**
 
-| Nama | NIM |
+| Name | Student ID |
 |------|-----|
 | Audra Zelvania P. H. | 18222106 |
 | Angelica Aliwinata | 18222113 |
@@ -12,438 +12,234 @@
 | Sekar Anindita N. | 18222125 |
 | Anindita Widya S. | 18222128 |
 
-## ⚡ Quick Start
+## Quick Start
 
-### **🖥️ Windows**
+### **Windows**
 ```powershell
 git clone https://github.com/jasonjahja/IF2050-2025-K03-ComFile.git
 cd IF2050-2025-K03-ComFile
 .\build.bat
-.\run.bat
+cd dist\executable
+# Double-click ComFile.bat to run!
 ```
 
-### **🐧 Linux/macOS**
-```bash
-git clone https://github.com/jasonjahja/IF2050-2025-K03-ComFile.git
-cd IF2050-2025-K03-ComFile
-make build-fat
-java -jar dist/document-management-system-fat.jar
-```
-
-### **👤 Login Testing**
+### **Login Testing**
 - **Admin:** `admincf / admin123`
 - **Manager:** `lanasteiner / lana123`
-- **Karyawan:** `oliviarhye / olivia123`
+- **Employee:** `oliviarhye / olivia123`
 
 ---
 
-## 📖 Penjelasan Singkat Aplikasi
+## Application Overview
 
-ComFile adalah aplikasi desktop berbasis Java Swing yang dirancang untuk mengelola dokumen secara efisien dengan fitur-fitur berikut:
+ComFile is a Java Swing desktop application designed for efficient document management with the following features:
 
-- **Autentikasi Pengguna**: Sistem login dengan peran Admin, Manager, dan Karyawan
-- **Manajemen Akun**: Sistem pengelolaan pengguna yang dimiliki oleh Admin
-- **Manajemen Dokumen**: Upload, download, dan organisasi berkas
-- **Kontrol Akses**: Pembagian akses dokumen berdasarkan peran pengguna
-- **Database Cloud**: Menggunakan PostgreSQL yang di-host di Neon
-- **Antarmuka Modern**: UI yang user-friendly dengan Java Swing
-
-## 🚀 Cara Menjalankan Aplikasi
-
-### ⚠️ **Perbedaan Platform**
-
-| Platform | Build System | Path Separator | Contoh Command |
-|----------|--------------|----------------|----------------|
-| **Windows** | Batch Scripts | `;` (semicolon) | `.\build.bat` |
-| **Linux/Unix/macOS** | Makefile | `:` (colon) | `make build` |
+- **User Authentication**: Login system with Admin, Manager, and Employee roles
+- **Account Management**: User management system owned by Admin
+- **Document Management**: Upload, download, and file organization
+- **Access Control**: Document access sharing based on user roles
+- **Cloud Database**: Uses PostgreSQL hosted on Neon
 
 ---
 
-### **🖥️ Windows (Direkomendasikan)**
+## How to Build and Run
+
+### **Step 1: Build Application**
 
 ```powershell
 # Clone repository
 git clone https://github.com/jasonjahja/IF2050-2025-K03-ComFile.git
 cd IF2050-2025-K03-ComFile
 
-# Kompilasi dan buat JAR file (dengan Fat JAR untuk database)
+# Build complete executable with all images and launcher
 .\build.bat
-
-# Jalankan aplikasi (otomatis gunakan Fat JAR)
-.\run.bat
 ```
 
-**Output yang Dihasilkan:**
-- `dist\document-management-system.jar` (regular JAR)
-- `dist\document-management-system-fat.jar` (dengan dependencies)
+### **Step 2: Run Application**
+
+```powershell
+# Go to executable folder
+cd dist\executable
+
+# Run application (choose one):
+# 1. Double-click ComFile.bat (EASIEST)
+# 2. Or run manually: java -jar ComFile.jar
+```
+
+**Generated Output:**
+- `dist\executable\ComFile.jar` (7MB - complete executable with all dependencies and images)
+- `dist\executable\ComFile.bat` (Windows launcher - double-click to run)
+- `dist\executable\ComFile.sh` (Linux launcher)
+- `dist\executable\README.txt` (usage guide)
 
 ---
 
-### **🐧 Linux/Unix/macOS**
+## Requirements
 
-```bash
-# Clone repository
-git clone https://github.com/jasonjahja/IF2050-2025-K03-ComFile.git
-cd IF2050-2025-K03-ComFile
-
-# Lihat informasi lengkap aplikasi
-make info
-
-# Jalankan langsung
-make run
-
-# Atau buat JAR file dulu
-make build              # Regular JAR
-make build-fat          # Fat JAR (dengan semua dependencies)
-
-# Jalankan JAR
-java -jar dist/document-management-system-fat.jar
-```
+- **Java 17 or higher**
+- **Internet connection** (for Neon PostgreSQL database)
+- **Windows OS** (for the batch script build process)
 
 ---
 
-### **🔧 Manual Build (Advanced)**
+## Implemented Modules
 
-```bash
-# Kompilasi source code
-mkdir -p out/production
-javac -cp "lib/*" -d out/production $(find src -name "*.java")
-
-# Jalankan aplikasi
-java -cp "lib/*:out/production" main.MainApplication
-```
-
----
-
-### **📚 Database Connectivity Issue Fix**
-
-Jika mengalami error database:
-```
-"No suitable driver found for jdbc:postgresql://..."
-```
-
-**Solusi:**
-1. **Windows:** `.\build.bat` otomatis membuat Fat JAR
-2. **Linux/macOS:** `make build-fat`
-3. Gunakan Fat JAR yang sudah include PostgreSQL driver
-
-## 📦 Daftar Modul yang Diimplementasi
-
-### 1. **Modul Autentikasi Pengguna**
-- **Pembagian Tugas**: Sistem Login/Logout, manajemen peran pengguna
-- **File Utama**: `src/pages/Login.java`, `src/pages/ManageDocuments/Document.java`
-- **Fitur**: 
-  - Login dengan username/password
-  - Role-based access (Admin/Manager/Karyawan)
+### 1. **User Authentication Module**
+- **Main Files**: `src/pages/Login.java`, `src/pages/ManageDocuments/Document.java`
+- **Features**: 
+  - Login with username/password with Enter key support
+  - Role-based access (Admin/Manager/Employee)
   - Session management
 
-### 2. **Modul Manajemen Dokumen**
-- **Pembagian Tugas**: Upload, download, delete dokumen
-- **File Utama**: `src/pages/ManageDocuments/MyDocuments.java`
-- **Fitur**:
-  - Upload file (PDF, DOCX, XLSX, gambar)
-  - Download dan buka dokumen
-  - Hapus dokumen dengan konfirmasi
+### 2. **Document Management Module**
+- **Main Files**: `src/pages/ManageDocuments/MyDocuments.java`
+- **Features**:
+  - Upload files (PDF, DOCX, XLSX, images)
+  - Download and open documents
+  - Delete documents with confirmation
 
-### 3. **Modul Komponen Antarmuka**
-- **Pembagian Tugas**: Navigation bar, search bar, filter
-- **File Utama**: 
+### 3. **Interface Components Module**
+- **Main Files**: 
   - `src/components/NavigationBar.java`
   - `src/components/SearchBar.java`
   - `src/components/Filter.java`
-- **Fitur**:
-  - Menu navigasi responsif
-  - Pencarian dan filter dokumen
-  - Komponen UI yang dapat digunakan kembali
+- **Features**:
+  - Responsive navigation menu
+  - Document search and filter
+  - Reusable UI components
 
-### 4. **Modul Kontrol Akses**
-- **Pembagian Tugas**: Manajemen perizinan, berbagi dokumen
-- **File Utama**: `src/components/AccessControl.java`
-- **Fitur**:
-  - Berbagi dokumen antar pengguna
-  - Tingkat perizinan (read, write, admin)
-  - Matriks kontrol akses
+### 4. **Access Control Module**
+- **Main Files**: `src/components/AccessControl.java`
+- **Features**:
+  - Share documents between users
+  - Permission levels (read, write, admin)
+  - Access control matrix
 
-### 5. **Modul Manajemen Admin**
-- **Pembagian Tugas**: Pengelolaan pengguna sistem
-- **File Utama**: 
+### 5. **Admin Management Module**
+- **Main Files**: 
   - `src/pages/Admin/AdminDashboard.java`
   - `src/pages/Admin/UserManagementDashboard.java`
   - `src/pages/Admin/AddUserPage.java`
   - `src/pages/Admin/EditUserPage.java`
-- **Fitur**:
-  - Dashboard admin
-  - Manajemen pengguna (CRUD)
-  - Monitoring aktivitas sistem
+- **Features**:
+  - Admin dashboard
+  - User management (CRUD)
+  - System activity monitoring
 
-### 6. **Modul Koneksi Database**
-- **Pembagian Tugas**: Konektivitas database, pola DAO
-- **File Utama**: 
-  - `src/utils/DBConnection.java`
-  - `src/utils/DocumentDAO.java`
-  - `src/utils/UserDAO.java`
-- **Fitur**:
-  - Koneksi ke Neon PostgreSQL
-  - Operasi CRUD
-  - Manajemen transaksi
+### 6. **Database Connection Module**
+- **Main Files**: `src/utils/DBConnection.java`, `src/utils/UserDAO.java`, `src/utils/DocumentDAO.java`
+- **Features**:
+  - Connection to Neon PostgreSQL
+  - User data CRUD operations
+  - Document metadata management
 
-## 🗄️ Daftar Tabel Basis Data
+---
 
-### 1. **Tabel `users`**
-| Atribut | Tipe Data | Keterangan |
-|---------|-----------|------------|
-| `id` | SERIAL PRIMARY KEY | ID unik user |
-| `username` | VARCHAR(50) UNIQUE | Username untuk login |
-| `password_hash` | VARCHAR(255) | Password yang sudah di-hash |
-| `full_name` | VARCHAR(100) | Nama lengkap user |
-| `role` | VARCHAR(20) | Peran: 'Admin', 'Manajer', atau 'Karyawan' |
-| `created_at` | TIMESTAMP | Waktu pembuatan akun |
-| `updated_at` | TIMESTAMP | Waktu update terakhir |
+## Troubleshooting
 
-### 2. **Tabel `documents`**
-| Atribut | Tipe Data | Keterangan |
-|---------|-----------|------------|
-| `id` | SERIAL PRIMARY KEY | ID unik dokumen |
-| `title` | VARCHAR(255) | Judul dokumen |
-| `filename` | VARCHAR(255) | Nama file asli |
-| `file_path` | VARCHAR(500) | Path penyimpanan file |
-| `file_size` | BIGINT | Ukuran file dalam bytes |
-| `mime_type` | VARCHAR(100) | Tipe MIME file |
-| `owner_id` | INTEGER | ID pemilik (FK ke users) |
-| `created_at` | TIMESTAMP | Waktu upload |
-| `updated_at` | TIMESTAMP | Waktu update terakhir |
-
-### 3. **Tabel `document_access`**
-| Atribut | Tipe Data | Keterangan |
-|---------|-----------|------------|
-| `id` | SERIAL PRIMARY KEY | ID unik permission |
-| `document_id` | INTEGER | ID dokumen (FK) |
-| `user_id` | INTEGER | ID user yang diberi akses (FK) |
-| `permission_level` | VARCHAR(20) | Level akses: 'read', 'write', 'admin' |
-| `granted_by` | INTEGER | ID user yang memberikan akses (FK) |
-| `granted_at` | TIMESTAMP | Waktu pemberian akses |
-
-### 4. **Tabel `document_versions`**
-| Atribut | Tipe Data | Keterangan |
-|---------|-----------|------------|
-| `id` | SERIAL PRIMARY KEY | ID unik versi |
-| `document_id` | INTEGER | ID dokumen (FK) |
-| `version_number` | INTEGER | Nomor versi |
-| `file_path` | VARCHAR(500) | Path file versi ini |
-| `file_size` | BIGINT | Ukuran file versi |
-| `created_by` | INTEGER | ID user pembuat versi (FK) |
-| `created_at` | TIMESTAMP | Waktu pembuatan versi |
-
-### 5. **Tabel `audit_log`**
-| Atribut | Tipe Data | Keterangan |
-|---------|-----------|------------|
-| `id` | SERIAL PRIMARY KEY | ID unik log |
-| `user_id` | INTEGER | ID user yang melakukan aksi (FK) |
-| `action` | VARCHAR(50) | Jenis aksi (CREATE, READ, UPDATE, DELETE) |
-| `entity_type` | VARCHAR(50) | Tipe entitas (DOCUMENT, USER, ACCESS) |
-| `entity_id` | INTEGER | ID entitas yang diaksi |
-| `description` | TEXT | Deskripsi detail aksi |
-| `ip_address` | INET | IP address user |
-| `user_agent` | TEXT | Browser/client info |
-| `created_at` | TIMESTAMP | Waktu aksi |
-
-## 🔄 CI/CD Pipeline (Tanpa Docker)
-
-### Cara Menjalankan CI/CD:
-
-1. **Push ke Repository**:
-   ```bash
-   git add .
-   git commit -m "Update aplikasi"
-   git push origin main
-   ```
-
-2. **Pipeline Otomatis Berjalan**:
-   - ✅ Test compilation
-   - ✅ Build JAR file
-   - ✅ Security scan
-   - ✅ Create release (jika di main branch)
-
-3. **Download Hasil**:
-   - JAR file dari GitHub Releases
-   - Atau dari Artifacts di Actions tab
-
-### Pipeline Stages:
-
-| Stage | Deskripsi | Output |
-|-------|-----------|--------|
-| **Test** | Kompilasi dan validasi code | Test reports |
-| **Build** | Buat executable JAR file | JAR artifact |
-| **Security** | Scan keamanan dependencies | Security report |
-| **Release** | Buat release otomatis | GitHub release |
-
-## 🛠️ Requirements
-
-### **📋 Wajib**
-- **Java 17** atau lebih tinggi
-- **Koneksi Internet** (untuk database Neon PostgreSQL)
-
-### **📋 Opsional (Sesuai Platform)**
-
-| Platform | Build Tool | Install Command |
-|----------|------------|-----------------|
-| **Windows** | Batch Scripts | ✅ Sudah tersedia (`build.bat`, `run.bat`) |
-| **Linux/Ubuntu** | Make | `sudo apt install make` |
-| **macOS** | Make | `brew install make` |
-
-### **📚 Dependencies (Auto-included)**
-- `postgresql-42.7.2.jar` - PostgreSQL JDBC Driver
-- Java Swing (built-in JDK)
-- Semua dependencies dikemas dalam Fat JAR
-
-## 👤 Akun Pengujian
-
-### Admin
-```
-Username: admincf        | Password: admin123
-```
-
-### Manager
-```
-Username: lanasteiner    | Password: lana123
-Username: candicewu      | Password: candice123
-Username: michaelscott   | Password: michael123
-```
-
-### Karyawan
-```
-Username: oliviarhye     | Password: olivia123
-Username: phoenixbaker   | Password: phoenix123
-Username: drewcano       | Password: drew123
-```
-
-## 📋 Perintah Build yang Tersedia
-
-### **🖥️ Windows Commands**
+### **Error: "Could not find or load main class"**
 
 ```powershell
-.\build.bat        # Kompilasi + buat JAR (regular + fat)
-.\run.bat          # Jalankan aplikasi (prioritas Fat JAR)
-```
-
-### **🐧 Linux/Unix/macOS Commands**
-
-```bash
-make help          # Tampilkan bantuan lengkap
-make info          # Informasi aplikasi dan platform
-make run           # Jalankan aplikasi langsung
-make build         # Buat regular JAR (dengan external deps)
-make build-fat     # Buat Fat JAR (semua deps ter-include)
-make test          # Jalankan pengujian
-make clean         # Bersihkan file build
-make demo          # Tampilkan cara demo aplikasi
-make ci            # Pipeline CI/CD lokal
-```
-
-## 🔧 Pemecahan Masalah
-
-### **❌ Error: "Could not find or load main class"**
-
-**Windows:**
-```powershell
-# Rebuild aplikasi
+# Rebuild application
 .\build.bat
 
-# Jalankan ulang
-.\run.bat
-```
+# Navigate to executable folder
+cd dist\executable
 
-**Linux/macOS:**
-```bash
-# Pastikan kompilasi berhasil
-make clean compile
-
-# Atau periksa classpath
-java -cp "lib/*:out/production" main.MainApplication
+# Run again
+.\ComFile.bat
 ```
 
 ---
 
-### **❌ Error: "No suitable driver found for jdbc:postgresql"**
+### **Error: "No suitable driver found for jdbc:postgresql"**
 
-**Solusi (Database Driver Issue):**
+**Solution:** The build process automatically includes the PostgreSQL driver. If you get this error:
 
-**Windows:**
 ```powershell
-# build.bat otomatis membuat Fat JAR yang sudah include PostgreSQL driver
+# Rebuild to ensure driver is included
 .\build.bat
-.\run.bat  # Akan prioritaskan Fat JAR
+cd dist\executable
+.\ComFile.bat
 ```
 
-**Linux/macOS:**
-```bash
-# Buat Fat JAR dengan semua dependencies
-make build-fat
-java -jar dist/document-management-system-fat.jar
-```
-
-**Verifikasi:**
-- ✅ `dist/document-management-system-fat.jar` harus ada
-- ✅ File size lebih besar (~6MB) karena include PostgreSQL driver
+**Verification:** `ComFile.jar` should be approximately 7MB (includes PostgreSQL driver + all images)
 
 ---
 
-### **❌ Error: Koneksi Database**
+### **Error: Images/Icons not showing**
+
+**Solution:** The build process automatically includes all images. If images are missing:
+
+```powershell
+# Rebuild to include all images
+.\build.bat
+cd dist\executable
+.\ComFile.bat
+```
+
+**Expected JAR contents:**
+- 26 image files (.png)
+- `img/avatars/` folder
+- All UI icons (navigation, buttons, etc.)
+
+---
+
+### **Error: Database Connection**
+
 ```bash
-# 1. Periksa koneksi internet
+# 1. Check internet connection
 ping google.com
 
-# 2. Test koneksi ke Neon PostgreSQL
-telnet ep-shy-leaf-a8yseowb-pooler.eastus2.azure.neon.tech 5432
-
-# 3. Periksa kredensial database di src/utils/DBConnection.java
+# 2. Verify database connectivity
+# The application uses Neon PostgreSQL cloud database
+# No local database setup required
 ```
 
 ---
 
-### **❌ Error: GUI tidak muncul (Linux/macOS)**
-```bash
-# Pastikan DISPLAY environment variable ter-set
-export DISPLAY=:0
+### **Error: Java not found**
 
-# Atau jalankan dengan virtual display
-Xvfb :99 -screen 0 1024x768x24 &
-export DISPLAY=:99
-```
-
----
-
-### **❌ Error: "make: command not found" (Windows)**
 ```powershell
-# Gunakan batch scripts untuk Windows
-.\build.bat    # Bukan make build
-.\run.bat      # Bukan make run
+# Install Java 17 or higher
+# Download from: https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html
+# OR use OpenJDK: https://adoptium.net/
 
-# Atau install make untuk Windows (opsional):
-# choco install make
+# Verify installation
+java -version
 ```
 
-## 📄 Informasi Build
+---
 
-### **📦 File Output**
-
-| Build Method | Output Files | Size | Use Case |
-|--------------|--------------|------|----------|
-| **Windows** (`.\build.bat`) | `document-management-system.jar`<br/>`document-management-system-fat.jar` | ~2MB<br/>~6MB | Regular JAR<br/>Self-contained JAR |
-| **Linux/macOS** (`make build`) | `document-management-system.jar` | ~2MB | Regular JAR (perlu lib/) |
-| **Linux/macOS** (`make build-fat`) | `document-management-system-fat.jar` | ~6MB | Self-contained JAR |
-
-### **🗃️ Project Structure**
+## Project Structure
 ```
 IF2050-2025-K03-ComFile/
-├── src/                    # Source code
-├── lib/                    # Dependencies (postgresql-42.7.2.jar)
-├── out/                    # Compiled classes
-├── dist/                   # JAR output files
-├── build.bat              # Windows build script
-├── run.bat                # Windows run script
-├── Makefile               # Unix build configuration
-└── requirements.txt       # Dependencies list
+├── src/                     # Source code
+├── img/                     # ALL images (26 files + avatars)
+├── lib/                     # Dependencies (postgresql-42.7.2.jar)
+├── dist/                    # Output files
+│   └── executable/          # Ready-to-distribute files
+│       ├── ComFile.jar                        # Executable JAR (7MB)
+│       ├── ComFile.bat                        # Windows launcher
+│       ├── ComFile.sh                         # Linux launcher
+│       └── README.txt                         # Usage instructions
+├── build.bat               # Build script (creates executable)
+└── requirements.txt        # Dependencies list
 ```
 
-Lihat file `requirements.txt` untuk daftar lengkap dependensi dan persyaratan sistem.
+## Features
+
+### **Enhanced Login Experience**
+- **Enter Key Support**: After entering username or password, press `Enter` to login
+- **Click to Login**: Traditional button click still works
+- **Faster Login**: More convenient for keyboard users
+
+### **Complete Self-Contained Application**
+- **No External Dependencies**: All libraries included in JAR
+- **All Images Included**: UI icons, avatars, and graphics embedded
+- **Cross-Platform Launchers**: Windows batch script and Linux shell script
+- **Ready for Distribution**: Single folder contains everything needed
+
+---
+
+See `requirements.txt` file for complete list of dependencies and system requirements.

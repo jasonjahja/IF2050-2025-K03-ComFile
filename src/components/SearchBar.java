@@ -1,11 +1,11 @@
 package components;
 
+import utils.ImageLoader;
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.net.URL;
 
 public class SearchBar extends JPanel {
 
@@ -19,17 +19,6 @@ public class SearchBar extends JPanel {
 
     private final String PLACEHOLDER = "Search document";
     private JTextField searchField;
-
-    private ImageIcon createImageIcon(String path) {
-        try {
-            String projectRoot = System.getProperty("user.dir");
-            String imgPath = projectRoot + "/img/" + path;
-            return new ImageIcon(imgPath);
-        } catch (Exception e) {
-            System.err.println("Couldn't find file: " + path);
-            return null;
-        }
-    }
 
     public SearchBar() {
         setLayout(new BorderLayout());
@@ -65,10 +54,9 @@ public class SearchBar extends JPanel {
         });
 
         // Search icon
-        ImageIcon searchIcon = createImageIcon("icon-search.png");
+        ImageIcon searchIcon = ImageLoader.loadScaledImage("img/icon-search.png", 20, 20);
         if (searchIcon != null) {
-            Image scaledSearch = searchIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-            JLabel searchLabel = new JLabel(new ImageIcon(scaledSearch));
+            JLabel searchLabel = new JLabel(searchIcon);
             searchLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
             add(searchLabel, BorderLayout.WEST);
         }

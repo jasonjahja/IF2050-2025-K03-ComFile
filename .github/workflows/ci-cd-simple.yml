@@ -86,11 +86,76 @@ jobs:
         echo "Class-Path: lib/postgresql-42.7.2.jar" >> manifest.txt
         jar cfm dist/document-management-system.jar manifest.txt -C out/production . -C . lib/
     
+    - name: Create Executable Fat JAR
+      run: |
+        mkdir -p dist/executable
+        mkdir -p out/fat-jar
+        # Extract PostgreSQL JAR
+        cd out/fat-jar && jar xf ../../lib/postgresql-42.7.2.jar
+        # Copy application classes
+        cp -r ../production/* .
+        # Copy images and resources
+        if [ -d "../../img" ]; then cp -r ../../img .; fi
+        if [ -d "../../src/uploads" ]; then cp -r ../../src/uploads .; fi
+        cd ../../
+        # Create executable manifest
+        echo "Main-Class: main.MainApplication" > manifest-executable.txt
+        # Create executable fat JAR
+        jar cfm dist/executable/ComFile-DocumentManagement.jar manifest-executable.txt -C out/fat-jar .
+        
+        # Create launcher scripts
+        cat > dist/executable/ComFile.sh << 'EOF'
+        #!/bin/bash
+        echo "================================================"
+        echo " COMFILE DOCUMENT MANAGEMENT SYSTEM"
+        echo "================================================"
+        echo "Starting application..."
+        echo
+        java -jar ComFile-DocumentManagement.jar
+        EOF
+        chmod +x dist/executable/ComFile.sh
+        
+        # Create README
+        cat > dist/executable/README.txt << 'EOF'
+        # ComFile Document Management System
+        =======================================
+        
+        CARA MENJALANKAN APLIKASI:
+        
+        Linux/macOS:
+          1. chmod +x ComFile.sh
+          2. ./ComFile.sh
+          ATAU
+          3. java -jar ComFile-DocumentManagement.jar
+        
+        Windows:
+          1. java -jar ComFile-DocumentManagement.jar
+        
+        REQUIREMENTS:
+        - Java 17 atau lebih tinggi
+        - Koneksi internet (untuk database Neon)
+        
+        USER LOGIN (untuk testing):
+          Admin    : admincf / admin123
+          Manager  : lanasteiner / lana123
+          Karyawan : oliviarhye / olivia123
+        
+        DATABASE:
+        PostgreSQL di Neon Cloud (tidak perlu setup database)
+        EOF
+    
     - name: Upload JAR artifact
       uses: actions/upload-artifact@v4
       with:
         name: document-management-system-jar
         path: dist/document-management-system.jar
+        retention-days: 30
+    
+    - name: Upload Executable artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: comfile-executable
+        path: dist/executable/
         retention-days: 30
 
   security-scan:
@@ -130,6 +195,12 @@ jobs:
       with:
         name: document-management-system-jar
         path: dist/
+        
+    - name: Download Executable artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: comfile-executable
+        path: dist/executable/
     
     - name: Get version
       id: version
@@ -165,7 +236,7 @@ jobs:
         draft: false
         prerelease: false
     
-    - name: Upload Release Asset
+    - name: Upload Standard JAR Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -173,4 +244,14 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: dist/document-management-system.jar
         asset_name: document-management-system.jar
+        asset_content_type: application/java-archive
+    
+    - name: Upload Executable JAR Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/executable/ComFile-DocumentManagement.jar
+        asset_name: ComFile-DocumentManagement.jar
         asset_content_type: application/java-archive 

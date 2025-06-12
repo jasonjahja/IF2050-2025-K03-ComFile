@@ -4,18 +4,20 @@ import main.MainApplication;
 import pages.Dashboard.Dashboard;
 import pages.Admin.AdminDashboard;
 import utils.DBConnection;
+import utils.ImageLoader;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.border.*;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class Login extends JPanel {
     private final PlaceholderTextField usernameField;
     private final PlaceholderPasswordField passwordField;
     private final JFrame parentFrame;
-
 
     public Login(JFrame parentFrame) {
         this.parentFrame = parentFrame;
@@ -35,7 +37,7 @@ public class Login extends JPanel {
                 Dimension size = getSize();
                 int imgWidth = size.width / 2;
                 int imgHeight = size.height;
-                ImageIcon rawIcon = new ImageIcon("img/login-image.png");
+                ImageIcon rawIcon = ImageLoader.loadImage("img/login-image.png");
                 Image scaled = rawIcon.getImage().getScaledInstance(imgWidth, imgHeight, Image.SCALE_SMOOTH);
                 imageLabel.setIcon(new ImageIcon(scaled));
             }
@@ -58,7 +60,7 @@ public class Login extends JPanel {
         contentWrapper.setPreferredSize(new Dimension(520, 600));
         contentWrapper.setBackground(Color.WHITE);
 
-        ImageIcon logoIcon = new ImageIcon("img/logo.png");
+        ImageIcon logoIcon = ImageLoader.loadImage("img/logo.png");
         Image logoImg = logoIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
         JLabel logo = new JLabel(new ImageIcon(logoImg));
         logo.setBounds(60, 10, 40, 40);
@@ -95,8 +97,8 @@ public class Login extends JPanel {
         passwordField.setBorder(new EmptyBorder(10, 10, 10, 10));
         passwordWrapper.add(passwordField, BorderLayout.CENTER);
 
-        ImageIcon eyeIcon = new ImageIcon(new ImageIcon("img/eye.png").getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH));
-        ImageIcon eyeSlashIcon = new ImageIcon(new ImageIcon("img/eye-slash.png").getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH));
+        ImageIcon eyeIcon = ImageLoader.loadScaledImage("img/eye.png", 16, 16);
+        ImageIcon eyeSlashIcon = ImageLoader.loadScaledImage("img/eye-slash.png", 16, 16);
 
         JLabel eyeToggle = new JLabel(eyeIcon);
         eyeToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -130,7 +132,8 @@ public class Login extends JPanel {
         gbc.gridy = 0;
         formPanel.add(contentWrapper, gbc);
 
-        loginButton.addActionListener(e -> {
+        // Create login action that can be reused
+        ActionListener loginAction = e -> {
             String username = usernameField.getText().trim();
             String password = new String(passwordField.getPassword()).trim();
 
@@ -141,7 +144,23 @@ public class Login extends JPanel {
             } else {
                 JOptionPane.showMessageDialog(this, "Username/password salah!");
             }
-        });
+        };
+
+        // Add action listener to button
+        loginButton.addActionListener(loginAction);
+
+        // Add Enter key functionality to both username and password fields
+        KeyListener enterKeyListener = new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    loginAction.actionPerformed(null);
+                }
+            }
+        };
+
+        usernameField.addKeyListener(enterKeyListener);
+        passwordField.addKeyListener(enterKeyListener);
 
         setVisible(true);
     }

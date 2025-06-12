@@ -1,6 +1,7 @@
 package pages.Admin;
 
 import utils.UserDAO;
+import utils.ImageLoader;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -244,7 +245,7 @@ public class UserManagementDashboard extends JPanel {
         
         // Delete button - only show if not current admin
         if (!rowUsername.equals(this.username)) {
-            ImageIcon binOriginal = new ImageIcon("img/icon-bin.png");
+                                        ImageIcon binOriginal = ImageLoader.loadImage("img/icon-bin.png");
             Image binScaled = binOriginal.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
             ImageIcon binIcon = new ImageIcon(binScaled);
             JLabel deleteBtn = new JLabel(binIcon);
@@ -271,7 +272,7 @@ public class UserManagementDashboard extends JPanel {
         }
         
         // Edit button
-        ImageIcon editOriginal = new ImageIcon("img/icon-edit.png");
+                                ImageIcon editOriginal = ImageLoader.loadImage("img/icon-edit.png");
         Image editScaled = editOriginal.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
         ImageIcon editIcon = new ImageIcon(editScaled);
         JLabel editBtn = new JLabel(editIcon);

@@ -1,5 +1,6 @@
 package components;
 
+import utils.ImageLoader;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -34,17 +35,6 @@ public class NavigationBar extends JPanel {
         roleLabel.setText(role);
     }
     
-    private ImageIcon createImageIcon(String path) {
-        try {
-            String projectRoot = System.getProperty("user.dir");
-            String imgPath = projectRoot + "/img/" + path;
-            return new ImageIcon(imgPath);
-        } catch (Exception e) {
-            System.err.println("Couldn't find file: " + path);
-            return null;
-        }
-    }
-    
     public void setActivePage(String page) {
         currentPage = page;
         for (Map.Entry<String, JLabel> entry : navLinks.entrySet()) {
@@ -55,7 +45,7 @@ public class NavigationBar extends JPanel {
             }
         }
     }
-    
+
     public NavigationBar() {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
@@ -63,10 +53,9 @@ public class NavigationBar extends JPanel {
         navLinks = new HashMap<>();
 
         // Logo 
-        ImageIcon logoIcon = createImageIcon("logo.png");
+        ImageIcon logoIcon = ImageLoader.loadScaledImage("img/logo.png", 40, 40);
         if (logoIcon != null) {
-            Image scaledLogo = logoIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
-            JLabel logo = new JLabel(new ImageIcon(scaledLogo));
+            JLabel logo = new JLabel(logoIcon);
             logo.setBorder(new EmptyBorder(5, 20, 5, 0));
             logo.setCursor(new Cursor(Cursor.HAND_CURSOR));
             logo.addMouseListener(new MouseAdapter() {
@@ -121,10 +110,9 @@ public class NavigationBar extends JPanel {
         }
 
         // Bell Icon
-        ImageIcon bellIcon = createImageIcon("icon-bell.png");
+        ImageIcon bellIcon = ImageLoader.loadScaledImage("img/icon-bell.png", 28, 28);
         if (bellIcon != null) {
-            Image scaledBell = bellIcon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
-            JLabel bellLabel = new JLabel(new ImageIcon(scaledBell));
+            JLabel bellLabel = new JLabel(bellIcon);
             bellLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
             bellLabel.addMouseListener(new MouseAdapter() {
                 @Override
@@ -147,10 +135,9 @@ public class NavigationBar extends JPanel {
         ));
         
         // User Icon
-        ImageIcon userIcon = createImageIcon("icon-user.png");
+        ImageIcon userIcon = ImageLoader.loadScaledImage("img/icon-user.png", 28, 28);
         if (userIcon != null) {
-            Image scaledUser = userIcon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
-            JLabel userLabel = new JLabel(new ImageIcon(scaledUser));
+            JLabel userLabel = new JLabel(userIcon);
             userLabel.setBorder(new EmptyBorder(0, 0, 0, 10));
             profileCard.add(userLabel, BorderLayout.WEST);
         }
@@ -168,10 +155,9 @@ public class NavigationBar extends JPanel {
         profileCard.add(namePanel, BorderLayout.CENTER);
 
         // Logout Icon
-        ImageIcon logoutIcon = createImageIcon("log-out.png");
+        ImageIcon logoutIcon = ImageLoader.loadScaledImage("img/log-out.png", 20, 20);
         if (logoutIcon != null) {
-            Image scaledLogout = logoutIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-            JLabel logoutLabel = new JLabel(new ImageIcon(scaledLogout));
+            JLabel logoutLabel = new JLabel(logoutIcon);
             logoutLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
             logoutLabel.addMouseListener(new MouseAdapter() {
                 @Override
