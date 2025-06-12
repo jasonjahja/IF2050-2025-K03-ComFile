@@ -168,7 +168,7 @@ public class NavigationBar extends JPanel {
         profileCard.add(namePanel, BorderLayout.CENTER);
 
         // Logout Icon
-        ImageIcon logoutIcon = createImageIcon("icon-logout.png");
+        ImageIcon logoutIcon = createImageIcon("log-out.png");
         if (logoutIcon != null) {
             Image scaledLogout = logoutIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
             JLabel logoutLabel = new JLabel(new ImageIcon(scaledLogout));

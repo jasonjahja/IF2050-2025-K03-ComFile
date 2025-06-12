@@ -397,7 +397,7 @@ public class AccessControl extends JDialog {
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.X_AXIS));
         leftPanel.setBackground(Color.WHITE);
 
-        ImageIcon userIcon = new ImageIcon("img/icon-user.png");
+        ImageIcon userIcon = new ImageIcon("img/icon-user1.png");
         Image scaledIcon = userIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
         JLabel avatarLabel = new JLabel(new ImageIcon(scaledIcon));
         avatarLabel.setBorder(new EmptyBorder(0, 0, 0, 12));
