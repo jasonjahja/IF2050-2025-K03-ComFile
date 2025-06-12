@@ -97,16 +97,19 @@ cd dist\executable
   - Upload files (PDF, DOCX, XLSX, images)
   - Download and open documents
   - Delete documents with confirmation
+  - Role-based document visibility (Admin sees all documents)
 
 ### 3. **Interface Components Module**
 - **Main Files**: 
   - `src/components/NavigationBar.java`
   - `src/components/SearchBar.java`
   - `src/components/Filter.java`
+  - `src/utils/ImageLoader.java`
 - **Features**:
   - Responsive navigation menu
   - Document search and filter
   - Reusable UI components
+  - JAR-compatible image loading system
 
 ### 4. **Access Control Module**
 - **Main Files**: `src/components/AccessControl.java`
@@ -169,7 +172,7 @@ cd dist\executable
 
 ### **Error: Images/Icons not showing**
 
-**Solution:** The build process automatically includes all images. If images are missing:
+**Solution:** The application now uses an improved image loading system that works in both development and JAR environments.
 
 ```powershell
 # Rebuild to include all images
@@ -177,6 +180,11 @@ cd dist\executable
 cd dist\executable
 .\ComFile.bat
 ```
+
+**How it works:**
+- `ImageLoader` utility class handles resource loading from both classpath (JAR) and file system
+- All UI components use this utility for consistent image loading
+- Fallback mechanisms ensure graceful degradation if images are missing
 
 **Expected JAR contents:**
 - 26 image files (.png)
