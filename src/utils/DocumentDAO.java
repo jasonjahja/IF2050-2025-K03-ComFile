@@ -129,6 +129,7 @@ public class DocumentDAO {
                 doc.sharedWith = accessMap.getOrDefault(id, new ArrayList<>());
                 doc.accessPermissions = new ArrayList<>(doc.sharedWith);
 
+                boolean isAdmin = currentUser != null && "Admin".equalsIgnoreCase(currentUser.role);
                 boolean isOwner = currentUser != null && owner != null && currentUser.id.equals(owner.id);
                 boolean hasSharedAccess = doc.accessPermissions.stream().anyMatch(p -> p.user.id.equals(currentUser.id));
                 boolean hasGeneralAccess = currentUser != null &&
@@ -137,7 +138,7 @@ public class DocumentDAO {
                         !doc.generalAccessGroup.equals("Restricted") &&
                         doc.generalAccessGroup.equals(currentUser.department);
 
-                if (isOwner || hasSharedAccess || hasGeneralAccess) {
+                if (isAdmin || isOwner || hasSharedAccess || hasGeneralAccess) {
                     documents.add(doc);
                 }
             }
