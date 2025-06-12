@@ -35,7 +35,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         setVisible(true);
     }
 
-    private void initializeApplication() {
+    public void initializeApplication() {
         setTitle("ComFile - Document Management System");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1400, 900);
@@ -54,8 +54,9 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         contentPanel = new JPanel(cardLayout);
     }
 
-    private void createPages(String username, String role) {
+    public void createPages(String username, String role) {
         navigationBar.setUserInfo(username, role);
+        navigationBar.setVisible(true);
         java.awt.Container parentContainer = contentPanel;
 
         if (role.equalsIgnoreCase("Admin")) {
@@ -75,7 +76,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         contentPanel.add(backupPage, "BACKUP");
     }
 
-    private JPanel createPlaceholderPage(String title, String description) {
+    public JPanel createPlaceholderPage(String title, String description) {
         JPanel page = new JPanel(new BorderLayout());
         page.setBackground(new Color(248, 249, 250));
 
@@ -109,13 +110,46 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
         return page;
     }
 
-    private void setupLayout() {
+    public void setupLayout() {
         setLayout(new BorderLayout());
         add(navigationBar, BorderLayout.NORTH);
         add(contentPanel, BorderLayout.CENTER);
     }
 
     // ========== Navigation Listener ==========
+
+    public MainApplication() {
+        instance = this;
+        setTitle("ComFile - Document Management System");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1400, 900);
+        setLocationRelativeTo(null);
+
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // ✅ Tambahkan ini
+        initializeApplication();
+        setupLayout();
+    }
+
+
+    public void showLoginPage() {
+        if (contentPanel == null) {
+            System.err.println("❌ contentPanel belum diinisialisasi!");
+            return;
+        }
+
+        navigationBar.setVisible(false);
+
+        contentPanel.removeAll();
+        contentPanel.add(new Login(this));
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
 
     @Override
     public void onHomeClicked() {
@@ -171,15 +205,12 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
 
     // ========== Main Awal: Login page ==========
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("ComFile Login");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1080, 720);
-            frame.setLocationRelativeTo(null);
-            frame.setContentPane(new Login(frame));
-            frame.setVisible(true);
-        });
-    }
+    SwingUtilities.invokeLater(() -> {
+        MainApplication app = new MainApplication();
+        app.showLoginPage(); // Tampilkan login sebagai panel pertama
+        app.setVisible(true);
+    });
+}
 
     public static MainApplication getInstance() {
         return instance;
