@@ -17,9 +17,15 @@ public class NavigationBar extends JPanel {
     private Color activeColor = new Color(61, 90, 254);
     private Color inactiveColor = new Color(50, 40, 70);
     private String currentPage = "";
-    
+    private String role;
+
+    public interface ExtendedNavigationListener extends NavigationListener {
+        void onUsersClicked();
+    }
+
     public interface NavigationListener {
         void onHomeClicked();
+        void onUsersClicked();
         void onDocumentsClicked();
         void onLogoutClicked();
     }
@@ -44,7 +50,8 @@ public class NavigationBar extends JPanel {
         }
     }
 
-    public NavigationBar() {
+    public NavigationBar(String role) {
+        this.role = role;
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
         setBackground(Color.WHITE);
@@ -73,10 +80,12 @@ public class NavigationBar extends JPanel {
         rightContainer.setBackground(Color.WHITE);
 
         // Menu links
-        String[] links = {"Home", "Documents"};
+        String[] links = role.equalsIgnoreCase("Admin") ?
+        new String[]{"Home", "Users", "Documents"} :
+        new String[]{"Home", "Documents"};
         for (String text : links) {
             JLabel link = new JLabel(text);
-            link.setFont(new Font("Arial", Font.PLAIN, 14));
+            link.setFont(new Font("SansSerif", Font.PLAIN, 14));
             link.setForeground(inactiveColor);
             link.setCursor(new Cursor(Cursor.HAND_CURSOR));
             
@@ -84,18 +93,24 @@ public class NavigationBar extends JPanel {
             link.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    if (navigationListener != null) {
-                        switch (text) {
-                            case "Home":
-                                navigationListener.onHomeClicked();
-                                setActivePage("Home");
-                                break;
-                            case "Documents":
-                                navigationListener.onDocumentsClicked();
-                                setActivePage("Documents");
-                                break;
-                        }
+                    switch (text) {
+                        case "Home":
+                            navigationListener.onHomeClicked();
+                            setActivePage("Home");
+                            break;
+                        case "Users":
+                            // Buat method baru di interface jika perlu
+                            if (navigationListener instanceof ExtendedNavigationListener) {
+                                ((ExtendedNavigationListener) navigationListener).onUsersClicked();
+                            }
+                            setActivePage("Users");
+                            break;
+                        case "Documents":
+                            navigationListener.onDocumentsClicked();
+                            setActivePage("Documents");
+                            break;
                     }
+
                 }
             });
             
@@ -125,11 +140,11 @@ public class NavigationBar extends JPanel {
         namePanel.setBackground(Color.WHITE);
         namePanel.setLayout(new BoxLayout(namePanel, BoxLayout.Y_AXIS));
         nameLabel = new JLabel("User");
-        nameLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
         roleLabel = new JLabel("Employee");
-        roleLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        roleLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         namePanel.add(nameLabel);
-        namePanel.add(Box.createVerticalStrut(4));
+        namePanel.add(Box.createVerticalStrut(3));
         namePanel.add(roleLabel);
         profileCard.add(namePanel, BorderLayout.CENTER);
 

@@ -33,7 +33,7 @@ public class Dashboard extends JPanel implements NavigationListener {
         //setLocationRelativeTo(null);
 
         // Initialize components
-        navigationBar = new NavigationBar();
+        navigationBar = new NavigationBar(userRole);
         navigationBar.setNavigationListener(this);
         navigationBar.setUserInfo(username, userRole);
 
@@ -288,6 +288,11 @@ public class Dashboard extends JPanel implements NavigationListener {
     @Override
     public void onHomeClicked() {
         // Already in home, do nothing
+    }
+
+    @Override
+    public void onUsersClicked() {
+        MainApplication.getInstance().onUsersClicked();
     }
 
     @Override

@@ -49,7 +49,7 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
             e.printStackTrace();
         }
 
-        navigationBar = new NavigationBar();
+        navigationBar = new NavigationBar(Document.currentUser.getRole());
         navigationBar.setNavigationListener(this);
 
         cardLayout = new CardLayout();
@@ -160,6 +160,30 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
     }
 
     @Override
+    public void onUsersClicked() {
+        boolean exists = false;
+        for (Component comp : contentPanel.getComponents()) {
+            if (comp.getName() != null && comp.getName().equals("USER_MANAGEMENT")) {
+                exists = true;
+                break;
+            }
+        }
+
+        if (!exists) {
+            JPanel userMgmtPage = new pages.Admin.UserManagementDashboard(
+                    Document.currentUser.getUsername(),
+                    Document.currentUser.getRole(),
+                    contentPanel
+            );
+            userMgmtPage.setName("USER_MANAGEMENT");
+            contentPanel.add(userMgmtPage, "USER_MANAGEMENT");
+        }
+
+        cardLayout.show(contentPanel, "USER_MANAGEMENT");
+    }
+
+
+    @Override
     public void onDocumentsClicked() {
         if (documentsPage != null) {
             documentsPage.refreshDocumentsAsync(); // Pakai versi async
@@ -255,13 +279,12 @@ public class MainApplication extends JFrame implements NavigationBar.NavigationL
             layeredPane.remove(darkOverlay);
             layeredPane.repaint();
 
-            dispose();
-            JFrame frame = new JFrame("ComFile Login");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1080, 720);
-            frame.setLocationRelativeTo(null);
-            frame.setContentPane(new Login(frame));
-            frame.setVisible(true);
+            setTitle("ComFile Login");
+            navigationBar.setVisible(false);
+            contentPanel.removeAll();
+            contentPanel.add(new Login(this));
+            contentPanel.revalidate();
+            contentPanel.repaint();
         });
 
         // Cancel button
