@@ -94,12 +94,25 @@ public class DocumentDAO {
         String query = "SELECT * FROM documents";
         Map<String, List<Document.AccessPermission>> accessMap = getAllSharedAccess();
         Document.User currentUser = Document.currentUser;
+        
+        System.out.println("🔍 Getting documents for user: " + 
+            (currentUser != null ? currentUser.id + " (Role: " + currentUser.role + ")" : "null"));
 
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
 
+            // Check if current user is admin - admins see all documents
+            boolean isAdmin = currentUser != null && "Admin".equalsIgnoreCase(currentUser.role);
+            if (isAdmin) {
+                System.out.println("👑 User is ADMIN - will see ALL documents");
+            }
+
+            int totalDocs = 0;
+            int accessibleDocs = 0;
+
             while (rs.next()) {
+                totalDocs++;
                 String id = rs.getString("id");
                 String title = rs.getString("title");
                 String content = rs.getString("content");
@@ -129,19 +142,32 @@ public class DocumentDAO {
                 doc.sharedWith = accessMap.getOrDefault(id, new ArrayList<>());
                 doc.accessPermissions = new ArrayList<>(doc.sharedWith);
 
-                boolean isAdmin = currentUser != null && "Admin".equalsIgnoreCase(currentUser.role);
+                // For admin users, add all documents without filtering
+                if (isAdmin) {
+                    documents.add(doc);
+                    accessibleDocs++;
+                    continue;
+                }
+                
+                // For non-admin users, apply access control filters
                 boolean isOwner = currentUser != null && owner != null && currentUser.id.equals(owner.id);
-                boolean hasSharedAccess = doc.accessPermissions.stream().anyMatch(p -> p.user.id.equals(currentUser.id));
+                boolean hasSharedAccess = doc.accessPermissions.stream()
+                    .anyMatch(p -> p.user != null && p.user.id.equals(currentUser.id));
                 boolean hasGeneralAccess = currentUser != null &&
                         doc.generalAccessRole != null &&
                         doc.generalAccessGroup != null &&
                         !doc.generalAccessGroup.equals("Restricted") &&
-                        doc.generalAccessGroup.equals(currentUser.department);
+                        (doc.generalAccessGroup.equals(currentUser.department) || 
+                         doc.generalAccessGroup.equalsIgnoreCase("All Staff") ||
+                         doc.generalAccessGroup.equalsIgnoreCase(currentUser.role));
 
-                if (isAdmin || isOwner || hasSharedAccess || hasGeneralAccess) {
+                if (isOwner || hasSharedAccess || hasGeneralAccess) {
                     documents.add(doc);
+                    accessibleDocs++;
                 }
             }
+            
+            System.out.println("📊 Documents: Total=" + totalDocs + ", Accessible=" + accessibleDocs);
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -177,26 +177,61 @@ public class Document {
     }
 
     public static boolean hasAccess(Doc doc, User user) {
-        if (user.role != null && user.role.equalsIgnoreCase("Admin")) return true;
-
-        if (doc.owner.id.equals(user.id)) return true;
-
-        for (AccessPermission ap : doc.sharedWith) {
-            if (ap.user.id.equals(user.id)) return true;
+        // Safety check for null parameters
+        if (user == null) {
+            System.err.println("hasAccess called with null user");
+            return false;
+        }
+        
+        if (doc == null) {
+            System.err.println("hasAccess called with null document");
+            return false;
+        }
+        
+        // Admin has access to everything
+        if (user.role != null && user.role.equalsIgnoreCase("Admin")) {
+            return true;
         }
 
-        for (AccessPermission ap : doc.accessPermissions) {
-            if (ap.user.id.equals(user.id)) return true;
+        // Document owner has access
+        if (doc.owner != null && doc.owner.id.equals(user.id)) {
+            return true;
         }
 
-        if (doc.generalAccessGroup != null && doc.generalAccessRole != null) {
+        // Check explicit sharing permissions
+        if (doc.sharedWith != null) {
+            for (AccessPermission ap : doc.sharedWith) {
+                if (ap.user != null && ap.user.id.equals(user.id)) {
+                    return true;
+                }
+            }
+        }
+
+        // Check access permissions
+        if (doc.accessPermissions != null) {
+            for (AccessPermission ap : doc.accessPermissions) {
+                if (ap.user != null && ap.user.id.equals(user.id)) {
+                    return true;
+                }
+            }
+        }
+
+        // Check group-based access
+        if (doc.generalAccessGroup != null && doc.generalAccessRole != null && 
+            !doc.generalAccessGroup.equals("Restricted")) {
+            
             String userRole = user.role != null ? user.role.trim().toLowerCase() : "";
             String userDept = user.department != null ? user.department.trim().toLowerCase() : "";
             String group = doc.generalAccessGroup.trim().toLowerCase();
-
-            String accessRole = doc.generalAccessRole != null ? doc.generalAccessRole.trim().toLowerCase() : "";
+            
+            // Check if "All Staff" access is granted
+            if (group.equals("all staff")) {
+                return true;
+            }
+            
+            // Check role/department match
             if (group.equals(userRole) || group.equals(userDept)) {
-                return accessRole.equals("viewer") || accessRole.equals("editor");
+                return true;
             }
         }
 

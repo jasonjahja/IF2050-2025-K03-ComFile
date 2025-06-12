@@ -1,6 +1,7 @@
 package components;
 import pages.ManageDocuments.Document;
 import main.MainApplication;
+import utils.ImageLoader;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -239,7 +240,7 @@ public class AccessControl extends JDialog {
             }
         });
 
-        ImageIcon dropdownIcon = new ImageIcon("img/icon-dropdown.png");
+        ImageIcon dropdownIcon = ImageLoader.loadImage("img/icon-dropdown.png");
 
         groupDropdown.setUI(new BasicComboBoxUI() {
             @Override
@@ -397,7 +398,7 @@ public class AccessControl extends JDialog {
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.X_AXIS));
         leftPanel.setBackground(Color.WHITE);
 
-        ImageIcon userIcon = new ImageIcon("img/icon-user1.png");
+        ImageIcon userIcon = ImageLoader.loadImage("img/icon-user1.png");
         Image scaledIcon = userIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
         JLabel avatarLabel = new JLabel(new ImageIcon(scaledIcon));
         avatarLabel.setBorder(new EmptyBorder(0, 0, 0, 12));
@@ -443,7 +444,7 @@ public class AccessControl extends JDialog {
             roleDropdown.setUI(new BasicComboBoxUI() {
                 @Override
                 protected JButton createArrowButton() {
-                    JButton button = new JButton(new ImageIcon("img/icon-dropdown.png"));
+                    JButton button = new JButton(ImageLoader.loadImage("img/icon-dropdown.png"));
                     button.setBorder(BorderFactory.createEmptyBorder());
                     button.setContentAreaFilled(false);
                     return button;

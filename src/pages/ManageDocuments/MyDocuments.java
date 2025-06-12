@@ -4,6 +4,7 @@ import components.SearchBar;
 import components.Filter;
 import pages.ManageDocuments.Document.Doc;
 import utils.DocumentDAO;
+import utils.ImageLoader;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentListener;
@@ -220,12 +221,14 @@ public class MyDocuments extends JPanel {
             // Cloud icon
             JLabel iconLabel = new JLabel();
             try {
-                String path = System.getProperty("user.dir") + "/img/cloud.png";
-                File imageFile = new File(path);
-                if (imageFile.exists()) {
-                    ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
-                    Image scaled = icon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
+                ImageIcon cloudIcon = ImageLoader.loadImage("img/cloud.png");
+                if (cloudIcon != null) {
+                    Image scaled = cloudIcon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
                     iconLabel.setIcon(new ImageIcon(scaled));
+                } else {
+                    System.err.println("Failed to load cloud.png using ImageLoader");
+                    iconLabel.setText("☁️");
+                    iconLabel.setFont(new Font("SansSerif", Font.PLAIN, 48));
                 }
             } catch (Exception ex) {
                 iconLabel.setText("☁️");
@@ -408,10 +411,9 @@ public class MyDocuments extends JPanel {
         // Load thumbnail
         ImageIcon docImage = null;
         try {
-            String path = System.getProperty("user.dir") + "/img/doc-thumb.png";
-            File imageFile = new File(path);
-            if (imageFile.exists()) {
-                docImage = new ImageIcon(imageFile.getAbsolutePath());
+            docImage = ImageLoader.loadImage("img/doc-thumb.png");
+            if (docImage == null) {
+                System.err.println("Failed to load doc-thumb.png using ImageLoader");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -457,7 +459,7 @@ public class MyDocuments extends JPanel {
         bottomPanel.add(infoPanel, BorderLayout.CENTER);
 
         //Options Button
-        ImageIcon icon = new ImageIcon("img/icon-dots.png");
+        ImageIcon icon = ImageLoader.loadImage("img/icon-dots.png");
         Image scaled = icon.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
         JLabel optionsLabel = new JLabel(new ImageIcon(scaled));
         optionsLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -471,12 +473,10 @@ public class MyDocuments extends JPanel {
         ImageIcon personIcon = null;
         ImageIcon binIcon = null;
         try {
-            String personPath = System.getProperty("user.dir") + "/img/person.png";
-            String binPath = System.getProperty("user.dir") + "/img/bin.png";
-            File personFile = new File(personPath);
-            File binFile = new File(binPath);
-            if (personFile.exists()) personIcon = new ImageIcon(personFile.getAbsolutePath());
-            if (binFile.exists()) binIcon = new ImageIcon(binFile.getAbsolutePath());
+            personIcon = ImageLoader.loadImage("img/person.png");
+            binIcon = ImageLoader.loadImage("img/bin.png");
+            if (personIcon == null) System.err.println("Failed to load person.png using ImageLoader");
+            if (binIcon == null) System.err.println("Failed to load bin.png using ImageLoader");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -665,7 +665,7 @@ public class MyDocuments extends JPanel {
         centerPanel.setBackground(Color.WHITE);
 
         // Delete illustration
-        ImageIcon deleteIcon = new ImageIcon("img/delete-illustration.png");
+        ImageIcon deleteIcon = ImageLoader.loadImage("img/delete-illustration.png");
         Image scaledImage = deleteIcon.getImage().getScaledInstance(180, 180, Image.SCALE_SMOOTH);
         JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
         imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -775,6 +775,7 @@ public class MyDocuments extends JPanel {
         SwingWorker<List<Doc>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<Doc> doInBackground() {
+                System.out.println("[ASYNC] Loading documents from database...");
                 return DocumentDAO.getAllDocumentsFromDB();
             }
 
@@ -782,10 +783,18 @@ public class MyDocuments extends JPanel {
             protected void done() {
                 try {
                     List<Doc> all = get();
-                    cachedDocs = all.stream()
-                            .filter(doc -> Document.hasAccess(doc, Document.currentUser))
-                            .filter(doc -> new File(doc.filePath).exists())
-                            .collect(Collectors.toList());
+                    
+                    // For admin users, show all documents without additional filtering
+                    if (Document.currentUser != null && "Admin".equalsIgnoreCase(Document.currentUser.role)) {
+                        cachedDocs = all.stream()
+                                .collect(Collectors.toList());
+                    } else {
+                        // For non-admin users, filter based on access
+                        cachedDocs = all.stream()
+                                .filter(doc -> Document.hasAccess(doc, Document.currentUser))
+                                .collect(Collectors.toList());
+                    }
+                    
                     loadDocumentsFromList(cachedDocs);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -813,9 +822,17 @@ public class MyDocuments extends JPanel {
         documentsGrid.removeAll();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
 
-        List<Doc> visibleDocs = docs.stream()
-                .filter(doc -> Document.hasAccess(doc, Document.currentUser))
-                .toList();
+        // For admin users, show all documents without additional filtering
+        List<Doc> visibleDocs;
+        if (Document.currentUser != null && "Admin".equalsIgnoreCase(Document.currentUser.role)) {
+            visibleDocs = docs;
+        } else {
+            // For non-admin users, filter based on access
+            visibleDocs = docs.stream()
+                    .filter(doc -> Document.hasAccess(doc, Document.currentUser))
+                    .toList();
+        }
+        
         if (visibleDocs.isEmpty()) {
             JLabel emptyMsg = new JLabel("No documents found.");
             emptyMsg.setFont(new Font("SansSerif", Font.PLAIN, 14));

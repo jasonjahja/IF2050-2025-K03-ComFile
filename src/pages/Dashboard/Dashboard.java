@@ -13,6 +13,7 @@ import components.NavigationBar.NavigationListener;
 import pages.ManageDocuments.MyDocuments;
 import pages.Login;
 import main.MainApplication;
+import utils.ImageLoader;
 
 public class Dashboard extends JPanel implements NavigationListener {
     private NavigationBar navigationBar;
@@ -69,7 +70,7 @@ public class Dashboard extends JPanel implements NavigationListener {
 
 
         // Add search icon
-        searchIcon = new JLabel(new ImageIcon("img/icon-search.png"));
+        searchIcon = new JLabel(ImageLoader.loadImage("img/icon-search.png"));
         searchIcon.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 15));
         searchPanel.add(searchIcon, BorderLayout.EAST);
 
@@ -126,7 +127,7 @@ public class Dashboard extends JPanel implements NavigationListener {
         circleIcon.setLayout(new GridBagLayout());
 
 
-        JLabel bell = new JLabel(new ImageIcon("img/notification.png"));
+        JLabel bell = new JLabel(ImageLoader.loadImage("img/notification.png"));
         circleIcon.add(bell);
         notifCard.add(circleIcon, BorderLayout.WEST);
 
@@ -141,7 +142,7 @@ public class Dashboard extends JPanel implements NavigationListener {
 
 
         // Star icon
-        JLabel star = new JLabel(new ImageIcon("img/Star.png"));
+        JLabel star = new JLabel(ImageLoader.loadImage("img/Star.png"));
         notifCard.add(star, BorderLayout.EAST);
 
 

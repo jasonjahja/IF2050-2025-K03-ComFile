@@ -3,6 +3,7 @@ package pages.Admin;
 import components.NavigationBar;
 import utils.UserDAO;
 import utils.DocumentDAO;
+import utils.ImageLoader;
 import pages.ManageDocuments.Document.Doc;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -253,7 +254,7 @@ public class AdminDashboard extends JPanel {
                     try {
                         // Delete button with trash icon - only show if not current admin
                         if (!rowUsername.equals(this.username)) {
-                            ImageIcon binOriginal = new ImageIcon("img/icon-bin.png");
+                            ImageIcon binOriginal = ImageLoader.loadImage("img/icon-bin.png");
                             Image binScaled = binOriginal.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
                             ImageIcon binIcon = new ImageIcon(binScaled);
                             JLabel deleteBtn = new JLabel(binIcon);
@@ -280,7 +281,7 @@ public class AdminDashboard extends JPanel {
                         }
                         
                         // Edit button with pencil icon  
-                        ImageIcon editOriginal = new ImageIcon("img/icon-edit.png");
+                        ImageIcon editOriginal = ImageLoader.loadImage("img/icon-edit.png");
                         Image editScaled = editOriginal.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
                         ImageIcon editIcon = new ImageIcon(editScaled);
                         JLabel editBtn = new JLabel(editIcon);

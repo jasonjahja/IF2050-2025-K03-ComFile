@@ -1,7 +1,12 @@
-# Compiled class file
+# ================================================
+# JAVA PROJECT - GITIGNORE
+# Document Management System
+# ================================================
+
+# Compiled class files
 *.class
 
-# Log file
+# Log files
 *.log
 
 # BlueJ files
@@ -10,8 +15,9 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
-# Package Files #
+# Package Files (except lib dependencies)
 *.jar
+!lib/*.jar
 *.war
 *.nar
 *.ear
@@ -19,9 +25,18 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs
+# Virtual machine crash logs
 hs_err_pid*
 replay_pid*
+
+# Build directories and artifacts
+out/
+build/
+bin/
+target/
+dist/
+manifest.txt
+manifest-fat.txt
 
 # IDE specific files
 .idea/
@@ -31,38 +46,32 @@ replay_pid*
 .classpath
 .project
 
-# Build directories
-out/
-build/
-bin/
-target/
-
-### IntelliJ IDEA ###
-out/
+# IntelliJ IDEA
 !**/src/main/**/out/
 !**/src/test/**/out/
 
-### Eclipse ###
+# Eclipse
 .apt_generated
-.classpath
 .factorypath
-.project
-.settings
 .springBeans
 .sts4-cache
-bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
-.vscode/
-
-### Mac OS ###
+# Operating System
 .DS_Store
+Thumbs.db
+
+# Application specific
+uploads/
+*.tmp
+*.temp
+*.ser
+documents.ser
