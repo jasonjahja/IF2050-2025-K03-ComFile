@@ -2,7 +2,7 @@ name: CI/CD Pipeline - Simple (No Docker)
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feat/ci-cd ]
   pull_request:
     branches: [ main ]
 
