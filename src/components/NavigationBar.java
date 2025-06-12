@@ -21,8 +21,6 @@ public class NavigationBar extends JPanel {
     public interface NavigationListener {
         void onHomeClicked();
         void onDocumentsClicked();
-        void onBackupClicked();
-        void onNotificationClicked();
         void onLogoutClicked();
     }
     
@@ -75,7 +73,7 @@ public class NavigationBar extends JPanel {
         rightContainer.setBackground(Color.WHITE);
 
         // Menu links
-        String[] links = {"Home", "Documents", "Backup"};
+        String[] links = {"Home", "Documents"};
         for (String text : links) {
             JLabel link = new JLabel(text);
             link.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -96,10 +94,6 @@ public class NavigationBar extends JPanel {
                                 navigationListener.onDocumentsClicked();
                                 setActivePage("Documents");
                                 break;
-                            case "Backup":
-                                navigationListener.onBackupClicked();
-                                setActivePage("Backup");
-                                break;
                         }
                     }
                 }
@@ -107,22 +101,6 @@ public class NavigationBar extends JPanel {
             
             navLinks.put(text, link);
             rightContainer.add(link);
-        }
-
-        // Bell Icon
-        ImageIcon bellIcon = ImageLoader.loadScaledImage("img/icon-bell.png", 28, 28);
-        if (bellIcon != null) {
-            JLabel bellLabel = new JLabel(bellIcon);
-            bellLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            bellLabel.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (navigationListener != null) {
-                        navigationListener.onNotificationClicked();
-                    }
-                }
-            });
-            rightContainer.add(bellLabel);
         }
 
         // Profile Card
@@ -151,6 +129,7 @@ public class NavigationBar extends JPanel {
         roleLabel = new JLabel("Employee");
         roleLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         namePanel.add(nameLabel);
+        namePanel.add(Box.createVerticalStrut(4));
         namePanel.add(roleLabel);
         profileCard.add(namePanel, BorderLayout.CENTER);
 

@@ -290,35 +290,14 @@ public class Dashboard extends JPanel implements NavigationListener {
         // Already in home, do nothing
     }
 
-
     @Override
     public void onDocumentsClicked() {
         MainApplication.getInstance().onDocumentsClicked();
     }
 
-
-
-
-
-    @Override
-    public void onBackupClicked() {
-
-
-
-
-    }
-
-
-    @Override
-    public void onNotificationClicked() {
-        System.out.println("Notification clicked");
-    }
-
-
     @Override
     public void onLogoutClicked() {
         MainApplication.getInstance().onLogoutClicked();
     }
-
 
 }
