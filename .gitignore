@@ -36,6 +36,8 @@ out/
 build/
 bin/
 target/
+dist/
+manifest.txt
 
 ### IntelliJ IDEA ###
 out/
